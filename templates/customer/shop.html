@@ -1,0 +1,64 @@
+{% extends "customer/base.html" %}
+{% from "customer/macros.html" import product_card %}
+
+{% block title %}Shop{% endblock %}
+
+{% block content %}
+<section class="page-hero-small">
+    <div class="container">
+        <nav class="breadcrumb">
+            <a href="/">Home</a> / <span>Shop</span>
+        </nav>
+        <h1>{% if active_category_name %}{{ active_category_name }}{% elif search_query %}Results for "{{ search_query }}"{% else %}All Motor Parts{% endif %}</h1>
+        <p style="color:#94a3b8;margin:0;">{% if products | length == 0 %}No parts matched your search.{% else %}Browse our full catalog of premium automotive components{% endif %}</p>
+    </div>
+</section>
+
+<section class="container shop-layout">
+    <aside class="shop-sidebar">
+        <h3>Categories</h3>
+        <div class="filter-list">
+            <a href="/shop" class="filter-link{% if not active_category %} active{% endif %}">
+                All Products <span class="filter-count">{{ all_products | length }}</span>
+            </a>
+            {% for cat in categories %}
+            <a href="/shop?category={{ cat.id }}" class="filter-link{% if active_category == cat.id %} active{% endif %}">
+                {{ cat.icon }} {{ cat.name }} <span class="filter-count">{{ cat.count }}</span>
+            </a>
+            {% endfor %}
+        </div>
+
+        <h3 style="margin-top:2rem;">Price Range</h3>
+        <div class="filter-list">
+            <label class="filter-link"><input type="checkbox" data-price-filter="0-2500"> Under ₱2,500</label>
+            <label class="filter-link"><input type="checkbox" data-price-filter="2500-5000"> ₱2,500 – ₱5,000</label>
+            <label class="filter-link"><input type="checkbox" data-price-filter="5000-10000"> ₱5,000 – ₱10,000</label>
+            <label class="filter-link"><input type="checkbox" data-price-filter="10000+"> Over ₱10,000</label>
+        </div>
+    </aside>
+
+    <div class="shop-main">
+        <div class="shop-toolbar">
+            <span class="shop-results" id="shopResults">{{ products | length }} products found</span>
+            <div class="shop-sort">
+                <select id="shopSort">
+                    <option value="featured">Sort: Featured</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="rating">Highest Rated</option>
+                    <option value="name">Name A–Z</option>
+                </select>
+            </div>
+        </div>
+        <div class="product-grid" id="shopGrid">
+            {% for product in products %}
+            {{ product_card(product) }}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/shop.js"></script>
+{% endblock %}

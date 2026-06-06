@@ -1,0 +1,111 @@
+{% extends "customer/base.html" %}
+{% from "customer/macros.html" import product_card %}
+
+{% block title %}{{ product.name }}{% endblock %}
+{% block meta_desc %}{{ product.short_desc }}{% endblock %}
+
+{% block content %}
+<section class="container product-detail">
+    <nav class="breadcrumb" style="padding-top:1.5rem;">
+        <a href="/">Home</a> / <a href="/shop">Shop</a> / <a href="/shop?category={{ product.category }}">{{ product.category | capitalize }}</a> / <span>{{ product.name[:40] }}...</span>
+    </nav>
+
+    <div class="product-detail-grid">
+        <div class="product-gallery">
+            <div class="img-placeholder img-{{ product.image }}">🔧</div>
+        </div>
+
+        <div class="product-info">
+            <span class="product-brand">{{ product.brand }}</span>
+            {% if product.badge %}
+            <span class="product-badge" style="position:static;display:inline-block;margin-left:0.5rem;">{{ product.badge }}</span>
+            {% endif %}
+            <h1>{{ product.name }}</h1>
+
+            <div class="product-rating" style="font-size:0.95rem;">
+                <span class="stars">★★★★★</span>
+                <span>{{ product.rating }} rating · {{ product.reviews }} reviews</span>
+            </div>
+
+            <div class="product-detail-price">
+                <span class="product-price">₱{{ "{:,.0f}".format(product.price) }}</span>
+                {% if product.original_price %}
+                <span class="product-price-old">₱{{ "{:,.0f}".format(product.original_price) }}</span>
+                {% if product.original_price > product.price %}
+                <span class="product-badge sale" style="position:static;">Save ₱{{ "{:,.0f}".format(product.original_price - product.price) }}</span>
+                {% endif %}
+                {% endif %}
+            </div>
+
+            <p class="product-desc">{{ product.desc }}</p>
+
+            <span class="product-stock {% if product.stock > 20 %}in-stock{% else %}low-stock{% endif %}">
+                {% if product.stock > 20 %}✓ In Stock — Ready to Ship{% else %}⚡ Only {{ product.stock }} left in stock{% endif %}
+            </span>
+
+            <div class="product-actions">
+                <div class="qty-selector">
+                    <button class="qty-btn" id="qtyMinus" type="button">−</button>
+                    <input type="number" id="productQty" value="1" min="1" max="{{ product.stock }}">
+                    <button class="qty-btn" id="qtyPlus" type="button">+</button>
+                </div>
+                <button class="btn btn-primary" id="addToCartBtn" data-add-to-cart="{{ product.id }}" style="flex:1;">
+                    Add to Cart — ₱{{ "{:,.0f}".format(product.price) }}
+                </button>
+            </div>
+            <button class="btn btn-dark btn-block" id="buyNowBtn" data-buy-now="{{ product.id }}">Buy Now</button>
+
+            <table class="specs-table">
+                <caption style="text-align:left;font-weight:700;margin-bottom:0.5rem;font-family:var(--font-display);">Specifications</caption>
+                {% for key, val in product.specs.items() %}
+                <tr><th>{{ key }}</th><td>{{ val }}</td></tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</section>
+
+{% if related %}
+<section class="section" style="background:var(--color-surface);">
+    <div class="container">
+        <div class="section-header-row">
+            <h2>Related Parts</h2>
+            <a href="/shop?category={{ product.category }}" class="view-all-link">View Category →</a>
+        </div>
+        <div class="product-grid">
+            {% for p in related %}
+            {{ product_card(p) }}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const qtyInput = document.getElementById('productQty');
+    const minus = document.getElementById('qtyMinus');
+    const plus = document.getElementById('qtyPlus');
+    const max = parseInt(qtyInput.max, 10);
+
+    minus.addEventListener('click', () => {
+        qtyInput.value = Math.max(1, parseInt(qtyInput.value, 10) - 1);
+    });
+    plus.addEventListener('click', () => {
+        qtyInput.value = Math.min(max, parseInt(qtyInput.value, 10) + 1);
+    });
+
+    document.getElementById('addToCartBtn').addEventListener('click', function () {
+        const product = WedzzCart.add(this.dataset.addToCart, parseInt(qtyInput.value, 10));
+        if (product && window.showToast) showToast(`${product.name} added to cart`);
+    });
+
+    document.getElementById('buyNowBtn').addEventListener('click', function () {
+        WedzzCart.add(this.dataset.buyNow, parseInt(qtyInput.value, 10));
+        window.location.href = '/checkout';
+    });
+});
+</script>
+{% endblock %}

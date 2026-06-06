@@ -1,0 +1,32 @@
+{% macro product_card(product) %}
+<article class="product-card" data-product-id="{{ product.id }}">
+    <div class="product-card-image">
+        {% if product.badge %}
+        <span class="product-badge{% if product.badge == 'Sale' %} sale{% endif %}">{{ product.badge }}</span>
+        {% endif %}
+        <a href="/product/{{ product.id }}">
+            <div class="img-placeholder img-{{ product.image }}">🔧</div>
+        </a>
+        <button class="product-quick-add" data-add-to-cart="{{ product.id }}" aria-label="Add to cart">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+    </div>
+    <div class="product-card-body">
+        <span class="product-brand">{{ product.brand }}</span>
+        <h3><a href="/product/{{ product.id }}">{{ product.name }}</a></h3>
+        <div class="product-rating">
+            <span class="stars">★★★★★</span>
+            <span>{{ product.rating }} ({{ product.reviews }})</span>
+        </div>
+        <div class="product-price-row">
+            <span class="product-price">₱{{ "{:,.0f}".format(product.price) }}</span>
+            {% if product.original_price %}
+            <span class="product-price-old">₱{{ "{:,.0f}".format(product.original_price) }}</span>
+            {% endif %}
+        </div>
+        <span class="product-stock {% if product.stock > 20 %}in-stock{% else %}low-stock{% endif %}">
+            {% if product.stock > 20 %}✓ In Stock{% else %}⚡ Only {{ product.stock }} left{% endif %}
+        </span>
+    </div>
+</article>
+{% endmacro %}

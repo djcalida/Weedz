@@ -1,0 +1,119 @@
+{% extends "customer/base.html" %}
+{% from "customer/macros.html" import product_card %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="hero-bg"></div>
+    <div class="container hero-content">
+        <span class="hero-badge">🏆 #1 Motor Parts Store in the Philippines</span>
+        <h1>Premium Parts.<br><span>Peak Performance.</span></h1>
+        <p class="hero-desc">Shop OEM-quality brakes, engine components, suspension, and electrical parts. Fast nationwide delivery with fitment guarantee.</p>
+        <div class="hero-actions">
+            <a href="/shop" class="btn btn-primary">Shop All Parts</a>
+            <a href="/shop?category=brakes" class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,0.3);">Browse Brakes</a>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat"><strong>12K+</strong><span>Parts in Stock</span></div>
+            <div class="hero-stat"><strong>50+</strong><span>Trusted Brands</span></div>
+            <div class="hero-stat"><strong>4.9★</strong><span>Customer Rating</span></div>
+            <div class="hero-stat"><strong>24hr</strong><span>Metro Delivery</span></div>
+        </div>
+    </div>
+</section>
+
+<section class="section" style="padding-top:3rem;padding-bottom:2rem;">
+    <div class="container">
+        <div class="category-grid">
+            {% for cat in categories %}
+            <a href="/shop?category={{ cat.id }}" class="category-card">
+                <div class="category-icon">{{ cat.icon }}</div>
+                <h3>{{ cat.name }}</h3>
+                <span>{{ cat.count }} products</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="section" style="background:var(--color-surface);">
+    <div class="container">
+        <div class="section-header-row">
+            <div>
+                <h2>Best Sellers</h2>
+                <p style="color:var(--color-text-muted);margin:0.25rem 0 0;">Top-rated parts loved by mechanics and drivers</p>
+            </div>
+            <a href="/shop" class="view-all-link">View All →</a>
+        </div>
+        <div class="product-grid">
+            {% for product in featured %}
+            {{ product_card(product) }}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="promo-banner">
+            <div>
+                <h2>Get 15% Off Your First Order</h2>
+                <p>Use code at checkout for instant savings on premium motor parts.</p>
+                <span class="promo-code">WEDZZ15</span>
+            </div>
+            <a href="/shop" class="btn btn-primary">Shop Now</a>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Why Wedzz Motorparts?</h2>
+            <p>Built for professionals and everyday drivers who demand reliability.</p>
+        </div>
+        <div class="trust-grid">
+            <div class="trust-card">
+                <div class="trust-icon">🚚</div>
+                <h3>Fast Nationwide Shipping</h3>
+                <p>Same-day dispatch before 2 PM. Free shipping on orders over ₱3,000.</p>
+            </div>
+            <div class="trust-card">
+                <div class="trust-icon">✓</div>
+                <h3>Fitment Guarantee</h3>
+                <p>Wrong part? Free exchange within 30 days. Our experts verify compatibility.</p>
+            </div>
+            <div class="trust-card">
+                <div class="trust-icon">🔒</div>
+                <h3>Secure Checkout</h3>
+                <p>GCash, cards, bank transfer, and COD. Your payment data is always protected.</p>
+            </div>
+            <div class="trust-card">
+                <div class="trust-icon">🛠️</div>
+                <h3>Expert Support</h3>
+                <p>Real mechanics on standby to help you find the exact part you need.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section" id="brands" style="background:var(--color-surface);">
+    <div class="container">
+        <div class="section-header">
+            <h2>Trusted Brands</h2>
+            <p>We partner with the world's leading automotive manufacturers.</p>
+        </div>
+        <div class="brand-strip">
+            <span class="brand-item">BREMBO</span>
+            <span class="brand-item">BOSCH</span>
+            <span class="brand-item">NGK</span>
+            <span class="brand-item">KYB</span>
+            <span class="brand-item">K&N</span>
+            <span class="brand-item">MOBIL 1</span>
+            <span class="brand-item">PHILIPS</span>
+            <span class="brand-item">EXEDY</span>
+        </div>
+    </div>
+</section>
+{% endblock %}

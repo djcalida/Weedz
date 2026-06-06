@@ -1,0 +1,28 @@
+{% extends "customer/base.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+    <div class="auth-card">
+        <h1>Create Account</h1>
+        <p>Join Wedzz Motorparts for faster checkout and order tracking.</p>
+        <form class="auth-form" action="/register" method="post">
+            <div class="form-group">
+                <label for="fullName">Full Name</label>
+                <input id="fullName" name="fullName" type="text" placeholder="Juan Dela Cruz" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" placeholder="you@example.com" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" placeholder="••••••••" required>
+            </div>
+            <button class="btn btn-primary btn-block" type="submit">Create Account</button>
+        </form>
+        <p class="auth-footer">Already have an account? <a href="/login">Sign in</a></p>
+    </div>
+</section>
+{% endblock %}
