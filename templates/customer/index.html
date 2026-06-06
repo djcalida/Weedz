@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedzz Motorparts</title>
+    <link rel="stylesheet" href="/static/css/customer_index.css">
+</head>
+<body>
+    <header class="page-header">
+        <div class="brand">Wedzz Motorparts</div>
+        <div class="auth-buttons">
+            <button class="btn btn-sm" data-modal-target="loginModal">Login</button>
+            <button class="btn btn-sm btn-secondary" data-modal-target="registerModal">Register</button>
+        </div>
+    </header>
+
+    <section class="hero">
+        <h1>Wedzz Motorparts</h1>
+        <p>Quality automotive parts for every ride. Explore premium components, reliable replacements, and expert service for motorcycles, cars, and commercial vehicles.</p>
+        <a class="btn" href="#features">Browse Parts</a>
+    </section>
+
+    <section class="card-slider-section">
+        <div class="slider-header">
+            <h2>Featured Parts in Action</h2>
+            <p>Choose from expertly crafted automotive parts and components designed to perform.</p>
+        </div>
+        <div class="card-slider" id="homeSlider">
+            <div class="slider-track">
+                <article class="slider-card">
+                    <div class="slider-card-image slider-card-image-1"></div>
+                    <div class="slider-card-content">
+                        <span class="slider-card-tag">Engine</span>
+                        <h3>High-performance engine components</h3>
+                        <p>Durable precision parts that deliver power and reliability for every ride.</p>
+                    </div>
+                </article>
+                <article class="slider-card">
+                    <div class="slider-card-image slider-card-image-2"></div>
+                    <div class="slider-card-content">
+                        <span class="slider-card-tag">Suspension</span>
+                        <h3>Smooth suspension for safer handling</h3>
+                        <p>Premium shocks, struts, and springs engineered for stability and comfort.</p>
+                    </div>
+                </article>
+                <article class="slider-card">
+                    <div class="slider-card-image slider-card-image-3"></div>
+                    <div class="slider-card-content">
+                        <span class="slider-card-tag">Electrical</span>
+                        <h3>Reliable electrical systems & batteries</h3>
+                        <p>Quality starters, alternators, and wiring solutions built to keep you moving.</p>
+                    </div>
+                </article>
+                <article class="slider-card">
+                    <div class="slider-card-image slider-card-image-4"></div>
+                    <div class="slider-card-content">
+                        <span class="slider-card-tag">Transmission</span>
+                        <h3>Heavy-duty transmission components</h3>
+                        <p>Precision gear kits and clutch systems built for strength and smooth shifting.</p>
+                    </div>
+                </article>
+                <article class="slider-card">
+                    <div class="slider-card-image slider-card-image-5"></div>
+                    <div class="slider-card-content">
+                        <span class="slider-card-tag">Brakes</span>
+                        <h3>High-performance braking systems</h3>
+                        <p>Reliable pads, rotors, and lines designed for responsive stopping power.</p>
+                    </div>
+                </article>
+                <article class="slider-card">
+                    <div class="slider-card-image slider-card-image-6"></div>
+                    <div class="slider-card-content">
+                        <span class="slider-card-tag">Performance</span>
+                        <h3>Upgraded parts for enhanced performance</h3>
+                        <p>Air filters, exhausts, and tuning components to maximize your vehicle's potential.</p>
+                    </div>
+                </article>
+            </div>
+            <div class="slider-controls" id="sliderDots"></div>
+        </div>
+    </section>
+
+    <section class="features" id="features">
+        <h2>Why Choose Wedzz Motorparts?</h2>
+        <div class="grid">
+            <div class="card">
+                <h3>Wide Selection</h3>
+                <p>From engine components to suspension and electrical systems, we stock trusted brands and hard-to-find items for all vehicle types.</p>
+            </div>
+            <div class="card">
+                <h3>Fast Delivery</h3>
+                <p>Get the parts you need quickly with dependable shipping and local pickup options available for faster turnaround.</p>
+            </div>
+            <div class="card">
+                <h3>Trusted Support</h3>
+                <p>Our team of experts is ready to help you choose the right part, answer questions, and keep your vehicle performing at its best.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2026 Wedzz Motorparts — Your trusted source for automotive parts.</p>
+    </footer>
+
+    <div class="modal-overlay" id="loginModal" aria-hidden="true">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Login</h2>
+                <button class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <form class="modal-form" action="/login" method="post">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input id="loginEmail" name="email" type="email" placeholder="you@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input id="loginPassword" name="password" type="password" placeholder="••••••••" required>
+                </div>
+                <button class="btn btn-block" type="submit">Sign In</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="registerModal" aria-hidden="true">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Register</h2>
+                <button class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <form class="modal-form" action="/register" method="post">
+                <div class="form-group">
+                    <label for="registerName">Full Name</label>
+                    <input id="registerName" name="fullName" type="text" placeholder="John Doe" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">Email</label>
+                    <input id="registerEmail" name="email" type="email" placeholder="you@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Password</label>
+                    <input id="registerPassword" name="password" type="password" placeholder="••••••••" required>
+                </div>
+                <button class="btn btn-block" type="submit">Create Account</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/customer_index.js"></script>
+
+
+</body>
+</html>
