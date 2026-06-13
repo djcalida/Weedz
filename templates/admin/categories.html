@@ -1,0 +1,91 @@
+{% extends "admin/base.html" %}
+{% block title %}Categories{% endblock %}
+{% block topbar_title %}Category Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div><h1>Categories</h1><p>Manage product categories and their settings</p></div>
+    <div class="page-actions">
+        <button class="btn btn-primary btn-sm" id="addCatBtn">+ Add Category</button>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem;">
+    {% for cat in categories %}
+    <div class="card" style="padding:1.25rem;">
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">
+            <div style="width:52px;height:52px;background:var(--ad-accent2);border-radius:12px;display:grid;place-items:center;font-size:1.5rem;flex-shrink:0;">{{ cat.icon }}</div>
+            <div>
+                <div style="font-weight:700;font-size:1rem;">{{ cat.name }}</div>
+                <div style="font-size:.8rem;color:var(--ad-muted);">ID: {{ cat.id }}</div>
+            </div>
+            <div class="ml-auto flex gap-1">
+                <button class="btn btn-xs btn-outline edit-cat-btn" data-name="{{ cat.name }}">Edit</button>
+                <button class="btn btn-xs btn-danger">Del</button>
+            </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem;font-size:.85rem;">
+            <span class="badge badge-blue">{{ cat.count }} products</span>
+            <span class="badge badge-green">Active</span>
+        </div>
+        <div style="margin-top:.75rem;">
+            <div style="font-size:.75rem;color:var(--ad-muted);margin-bottom:.3rem;">Product fill rate</div>
+            <div class="stock-bar-track" style="height:8px;">
+                <div class="stock-bar-fill" style="width:{{ (cat.count / 30 * 100) | round | int }}%;"></div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="admin-modal-overlay" id="catModal">
+    <div class="admin-modal" style="max-width:420px;">
+        <div class="admin-modal-header">
+            <h3 id="catModalTitle">Add Category</h3>
+            <button class="modal-close-btn" data-close-modal="catModal">&times;</button>
+        </div>
+        <div class="admin-modal-body">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Category Name</label>
+                    <input class="form-input" id="catName" type="text" placeholder="e.g. Brakes">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Icon (emoji)</label>
+                    <input class="form-input" id="catIcon" type="text" placeholder="e.g. 🛑">
+                </div>
+                <div class="form-group full">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-textarea" placeholder="Short description of this category..."></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="admin-modal-footer">
+            <button class="btn btn-outline" data-close-modal="catModal">Cancel</button>
+            <button class="btn btn-primary" id="saveCatBtn">Save Category</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('addCatBtn').addEventListener('click', () => {
+    document.getElementById('catModalTitle').textContent = 'Add Category';
+    AdminUI.openModal('catModal');
+});
+document.querySelectorAll('.edit-cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.getElementById('catModalTitle').textContent = 'Edit Category';
+        document.getElementById('catName').value = btn.dataset.name;
+        AdminUI.openModal('catModal');
+    });
+});
+document.getElementById('saveCatBtn').addEventListener('click', () => {
+    AdminUI.closeModal('catModal');
+    AdminUI.toast('Category saved!', 'success');
+});
+</script>
+{% endblock %}

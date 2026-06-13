@@ -1,0 +1,253 @@
+{% extends "admin/base.html" %}
+{% block title %}Products{% endblock %}
+{% block topbar_title %}Product Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Products</h1>
+        <p>{{ products | length }} products across {{ categories | length }} categories</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-outline btn-sm">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV
+        </button>
+        <button class="btn btn-primary btn-sm" id="addProductBtn">+ Add Product</button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="filter-bar">
+        <div class="filter-search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="search" id="productSearch" placeholder="Search by name, brand, SKU...">
+        </div>
+        <select class="filter-select" id="categoryFilter" title="Filter by category" aria-label="Filter by category">
+            <option value="">All Categories</option>
+            {% for cat in categories %}
+            <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+        <select class="filter-select" id="stockFilter" title="Filter by stock" aria-label="Filter by stock">
+            <option value="">All Stock</option>
+            <option value="low">Low Stock (&lt;20)</option>
+            <option value="out">Out of Stock</option>
+            <option value="in">In Stock</option>
+        </select>
+        <select class="filter-select" id="sortProducts" title="Sort products" aria-label="Sort products">
+            <option value="name">Sort: Name A–Z</option>
+            <option value="price-asc">Price ↑</option>
+            <option value="price-desc">Price ↓</option>
+            <option value="stock-asc">Stock ↑</option>
+            <option value="stock-desc">Stock ↓</option>
+        </select>
+    </div>
+
+    <div class="table-wrap">
+        <table class="admin-table" id="productsTable">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="selectAll" aria-label="Select all products"></th>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Rating</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="productsBody">
+                {% for p in products %}
+                <tr data-category="{{ p.category }}" data-stock="{{ p.stock }}" data-name="{{ p.name | lower }}" data-price="{{ p.price }}">
+                    <td><input type="checkbox" class="row-check" aria-label="Select {{ p.name }}"></td>
+                    <td>
+                        <div class="td-product">
+                            <div class="td-product-img img-{{ p.image }}" style="background:var(--ad-bg);">🔩</div>
+                            <div>
+                                <div class="td-product-name">{{ p.name[:45] }}{% if p.name|length > 45 %}…{% endif %}</div>
+                                <div class="td-product-brand">{{ p.brand }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="badge badge-blue">{{ p.category | capitalize }}</span></td>
+                    <td>
+                        <div class="font-bold">₱{{ '{:,}'.format(p.price) }}</div>
+                        {% if p.original_price %}<div class="text-muted text-sm" style="text-decoration:line-through;">₱{{ '{:,}'.format(p.original_price) }}</div>{% endif %}
+                    </td>
+                    <td>
+                        <div class="stock-bar-wrap">
+                            {% set pct = [[(p.stock / 200 * 100) | round | int, 100] | min, 0] | max %}
+                            <div class="stock-bar-track">
+                                <div class="stock-bar-fill {% if p.stock < 15 %}low{% elif p.stock < 30 %}medium{% endif %}" style="width:{{ pct }}%;"></div>
+                            </div>
+                            <span class="stock-bar-num {% if p.stock < 15 %}text-red{% elif p.stock < 30 %}text-accent{% else %}text-green{% endif %}">{{ p.stock }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="flex items-center gap-1">
+                            <span style="color:#fbbf24;">★</span>
+                            <span style="font-size:.875rem;font-weight:600;">{{ p.rating }}</span>
+                            <span class="text-muted text-sm">({{ p.reviews }})</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge {% if p.stock > 0 %}badge-green{% else %}badge-red{% endif %}">
+                            {% if p.stock > 0 %}Active{% else %}Out of Stock{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="flex gap-1">
+                            <button class="btn btn-xs btn-outline edit-product-btn" data-id="{{ p.id }}" title="Edit">✏️</button>
+                            <button class="btn btn-xs btn-outline" title="View" onclick="window.open('/product/{{ p.id }}','_blank')">👁</button>
+                            <button class="btn btn-xs btn-danger delete-product-btn" data-id="{{ p.id }}" title="Delete">🗑</button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination">
+        <button class="page-btn" disabled>← Prev</button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn">2</button>
+        <button class="page-btn">Next →</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- Add / Edit Product Modal -->
+<div class="admin-modal-overlay" id="productModal">
+    <div class="admin-modal">
+        <div class="admin-modal-header">
+            <h3 id="productModalTitle">Add New Product</h3>
+            <button class="modal-close-btn" data-close-modal="productModal">&times;</button>
+        </div>
+        <div class="admin-modal-body">
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label class="form-label">Product Name</label>
+                    <input class="form-input" type="text" placeholder="e.g. Brembo Brake Pads Front" id="pName">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Brand</label>
+                    <input class="form-input" type="text" placeholder="e.g. Brembo" id="pBrand">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select class="form-select" id="pCategory" title="Product category" aria-label="Product category">
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}">{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Price (₱)</label>
+                    <input class="form-input" type="number" placeholder="0" id="pPrice">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Original Price (₱)</label>
+                    <input class="form-input" type="number" placeholder="Leave blank if no discount" id="pOriginal">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Stock Quantity</label>
+                    <input class="form-input" type="number" placeholder="0" id="pStock">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Badge Label</label>
+                    <input class="form-input" type="text" placeholder="e.g. Best Seller, Sale" id="pBadge">
+                </div>
+                <div class="form-group full">
+                    <label class="form-label">Short Description</label>
+                    <input class="form-input" type="text" placeholder="One-line product summary" id="pShortDesc">
+                </div>
+                <div class="form-group full">
+                    <label class="form-label">Full Description</label>
+                    <textarea class="form-textarea" placeholder="Detailed product description..." id="pDesc"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="admin-modal-footer">
+            <button class="btn btn-outline" data-close-modal="productModal">Cancel</button>
+            <button class="btn btn-primary" id="saveProductBtn">Save Product</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete confirm -->
+<div class="admin-modal-overlay" id="deleteModal">
+    <div class="admin-modal" style="max-width:400px;">
+        <div class="admin-modal-header">
+            <h3>Delete Product</h3>
+            <button class="modal-close-btn" data-close-modal="deleteModal">&times;</button>
+        </div>
+        <div class="admin-modal-body">
+            <div class="alert alert-danger">⚠️ This action cannot be undone. The product will be permanently removed.</div>
+            <p style="font-size:.9rem;color:var(--ad-muted);">Are you sure you want to delete this product?</p>
+        </div>
+        <div class="admin-modal-footer">
+            <button class="btn btn-outline" data-close-modal="deleteModal">Cancel</button>
+            <button class="btn btn-danger" id="confirmDeleteBtn">Yes, Delete</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('addProductBtn').addEventListener('click', () => {
+    document.getElementById('productModalTitle').textContent = 'Add New Product';
+    AdminUI.openModal('productModal');
+});
+document.querySelectorAll('.edit-product-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.getElementById('productModalTitle').textContent = 'Edit Product';
+        AdminUI.openModal('productModal');
+    });
+});
+document.querySelectorAll('.delete-product-btn').forEach(btn => {
+    btn.addEventListener('click', () => AdminUI.openModal('deleteModal'));
+});
+document.getElementById('saveProductBtn').addEventListener('click', () => {
+    AdminUI.closeModal('productModal');
+    AdminUI.toast('Product saved successfully!', 'success');
+});
+document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+    AdminUI.closeModal('deleteModal');
+    AdminUI.toast('Product deleted.', 'warning');
+});
+
+// Live search + filter
+const searchInput = document.getElementById('productSearch');
+const catFilter   = document.getElementById('categoryFilter');
+const stockFilter = document.getElementById('stockFilter');
+
+function applyFilters() {
+    const q     = searchInput.value.toLowerCase();
+    const cat   = catFilter.value;
+    const stock = stockFilter.value;
+    document.querySelectorAll('#productsBody tr').forEach(row => {
+        const name  = row.dataset.name || '';
+        const rc    = row.dataset.category || '';
+        const rs    = parseInt(row.dataset.stock, 10);
+        let show = name.includes(q);
+        if (cat  && rc !== cat) show = false;
+        if (stock === 'low'  && rs >= 20) show = false;
+        if (stock === 'out'  && rs > 0)   show = false;
+        if (stock === 'in'   && rs <= 0)  show = false;
+        row.style.display = show ? '' : 'none';
+    });
+}
+searchInput.addEventListener('input', applyFilters);
+catFilter.addEventListener('change', applyFilters);
+stockFilter.addEventListener('change', applyFilters);
+
+document.getElementById('selectAll').addEventListener('change', function() {
+    document.querySelectorAll('.row-check').forEach(c => c.checked = this.checked);
+});
+</script>
+{% endblock %}

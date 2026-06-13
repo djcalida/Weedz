@@ -1,0 +1,169 @@
+{% extends "admin/base.html" %}
+{% block title %}Employee Access{% endblock %}
+{% block topbar_title %}Employee Access Roles{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div><h1>Employee Access Roles</h1><p>{{ employees | length }} employees — manage roles and permissions</p></div>
+    <div class="page-actions">
+        <button class="btn btn-primary btn-sm" id="addEmpBtn">+ Add Employee</button>
+    </div>
+</div>
+
+<!-- Role overview -->
+<div class="stats-grid">
+    {% set roles = [('Super Admin','All permissions — full access','badge-red'),('Manager','Manage orders, products, reports','badge-orange'),('Staff','View & process orders/inventory','badge-blue'),('Viewer','Read-only access','badge-gray')] %}
+    {% for role, desc, badge in roles %}
+    <div class="card" style="padding:1rem;">
+        <span class="badge {{ badge }}" style="margin-bottom:.6rem;">{{ role }}</span>
+        <div style="font-size:.8rem;color:var(--ad-muted);">{{ desc }}</div>
+        <div style="font-size:.75rem;color:var(--ad-muted);margin-top:.5rem;font-weight:600;">
+            {{ employees | selectattr('role','eq',role) | list | length }} employee(s)
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="card">
+    <div class="filter-bar">
+        <div class="filter-search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="search" id="empSearch" placeholder="Search by name or email...">
+        </div>
+        <select class="filter-select" id="empRoleFilter" title="Filter by role" aria-label="Filter by role">
+            <option value="">All Roles</option>
+            <option>Super Admin</option><option>Manager</option><option>Staff</option><option>Viewer</option>
+        </select>
+        <select class="filter-select" id="empStatusFilter" title="Filter by status" aria-label="Filter by status">
+            <option value="">All Statuses</option>
+            <option>Active</option><option>Inactive</option>
+        </select>
+    </div>
+    <div class="table-wrap">
+        <table class="admin-table" id="empTable">
+            <thead>
+                <tr><th>Employee</th><th>Department</th><th>Role</th><th>Status</th><th>Last Login</th><th>Joined</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="empBody">
+                {% for e in employees %}
+                <tr data-name="{{ e.name | lower }}" data-email="{{ e.email | lower }}" data-role="{{ e.role }}" data-status="{{ e.status }}">
+                    <td>
+                        <div class="td-customer">
+                            <div class="td-avatar">{{ e.name[0] }}</div>
+                            <div>
+                                <div class="td-name">{{ e.name }}</div>
+                                <div class="td-email">{{ e.email }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ e.department }}</td>
+                    <td>
+                        <span class="badge {% if e.role == 'Super Admin' %}badge-red{% elif e.role == 'Manager' %}badge-orange{% elif e.role == 'Staff' %}badge-blue{% else %}badge-gray{% endif %}">
+                            {{ e.role }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge {% if e.status == 'Active' %}badge-green{% else %}badge-gray{% endif %}">{{ e.status }}</span>
+                    </td>
+                    <td class="text-muted text-sm">{{ e.last_login }}</td>
+                    <td class="text-muted text-sm">{{ e.joined }}</td>
+                    <td>
+                        <div class="flex gap-1">
+                            <button class="btn btn-xs btn-outline edit-emp-btn" data-id="{{ e.id }}">Edit</button>
+                            {% if e.role != 'Super Admin' %}
+                            <button class="btn btn-xs btn-danger">Remove</button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="admin-modal-overlay" id="empModal">
+    <div class="admin-modal">
+        <div class="admin-modal-header">
+            <h3 id="empModalTitle">Add Employee</h3>
+            <button class="modal-close-btn" data-close-modal="empModal">&times;</button>
+        </div>
+        <div class="admin-modal-body">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input class="form-input" type="text" placeholder="e.g. Juan Dela Cruz" id="empName">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input class="form-input" type="email" placeholder="juan@wedzz.com" id="empEmail">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Role</label>
+                    <select class="form-select" id="empRole" title="Employee role" aria-label="Employee role">
+                        <option>Manager</option><option>Staff</option><option>Viewer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Department</label>
+                    <select class="form-select" title="Department" aria-label="Department">
+                        <option>Operations</option><option>Sales</option><option>Warehouse</option>
+                        <option>Customer Svc</option><option>Accounting</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Temporary Password</label>
+                    <input class="form-input" type="password" placeholder="••••••••" id="empPass">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" title="Status" aria-label="Status"><option>Active</option><option>Inactive</option></select>
+                </div>
+            </div>
+            <div class="alert alert-info mt-2">ℹ️ Employee will receive a welcome email to set their password.</div>
+        </div>
+        <div class="admin-modal-footer">
+            <button class="btn btn-outline" data-close-modal="empModal">Cancel</button>
+            <button class="btn btn-primary" id="saveEmpBtn">Save Employee</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('addEmpBtn').addEventListener('click', () => {
+    document.getElementById('empModalTitle').textContent = 'Add Employee';
+    AdminUI.openModal('empModal');
+});
+document.querySelectorAll('.edit-emp-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.getElementById('empModalTitle').textContent = 'Edit Employee';
+        AdminUI.openModal('empModal');
+    });
+});
+document.getElementById('saveEmpBtn').addEventListener('click', () => {
+    AdminUI.closeModal('empModal');
+    AdminUI.toast('Employee saved successfully!', 'success');
+});
+const es = document.getElementById('empSearch');
+const erf = document.getElementById('empRoleFilter');
+const esf = document.getElementById('empStatusFilter');
+function filterEmp() {
+    const q = es.value.toLowerCase();
+    const rf = erf.value;
+    const sf = esf.value;
+    document.querySelectorAll('#empBody tr').forEach(row => {
+        let show = row.dataset.name.includes(q) || row.dataset.email.includes(q);
+        if (rf && row.dataset.role !== rf) show = false;
+        if (sf && row.dataset.status !== sf) show = false;
+        row.style.display = show ? '' : 'none';
+    });
+}
+es.addEventListener('input', filterEmp);
+erf.addEventListener('change', filterEmp);
+esf.addEventListener('change', filterEmp);
+</script>
+{% endblock %}

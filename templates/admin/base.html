@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard{% endblock %} — Wedzz Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/admin.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="admin-body">
+<div class="admin-layout">
+
+    <!-- Sidebar overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar">
+        <div class="sidebar-logo">
+            <div class="sidebar-logo-icon">W</div>
+            <div>
+                <div class="sidebar-logo-text">Wedzz</div>
+                <div class="sidebar-logo-sub">Admin Panel</div>
+            </div>
+        </div>
+
+        <div class="sidebar-nav">
+            <div class="sidebar-section">Main</div>
+            <a href="/admin" class="sidebar-link {% if active_page == 'dashboard' %}active{% endif %}">
+                <span class="link-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span> Dashboard
+            </a>
+            <a href="/admin/orders" class="sidebar-link {% if active_page == 'orders' %}active{% endif %}">
+                <span class="link-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></span> Orders
+                {% if pending_count %}<span class="sidebar-badge">{{ pending_count }}</span>{% endif %}
+            </a>
+            <a href="/admin/products" class="sidebar-link {% if active_page == 'products' %}active{% endif %}">
+                <span class="link-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span> Products
+            </a>
+            <a href="/admin/inventory" class="sidebar-link {% if active_page == 'inventory' %}active{% endif %}">
+                <span class="link-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span> Inventory
+                {% if low_stock_count %}<span class="sidebar-badge">{{ low_stock_count }}</span>{% endif %}
+            </a>
+
+            <div class="sidebar-section">Sales</div>
+            <a href="/admin/customers" class="sidebar-link {% if active_page == 'customers' %}active{% endif %}">
+                <span class="link-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Customers
+            </a>
+            <a href="/admin/sales" class="sidebar-link {% if active_page == 'sales' %}active{% endif %}">
+                <span class="link-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span> Sales Report
+            </a>
+            <a href="/admin/refunds" class="sidebar-link {% if active_page == 'refunds' %}active{% endif %}">
+                <span class="link-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.1"/></svg></span> Refunds & Returns
+                {% if refund_count %}<span class="sidebar-badge">{{ refund_count }}</span>{% endif %}
+            </a>
+
+            <div class="sidebar-section">Catalog</div>
+            <a href="/admin/categories" class="sidebar-link {% if active_page == 'categories' %}active{% endif %}">
+                <span class="link-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></span> Categories
+            </a>
+            <a href="/admin/promos" class="sidebar-link {% if active_page == 'promos' %}active{% endif %}">
+                <span class="link-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></span> Promo Codes
+            </a>
+
+            <div class="sidebar-section">Admin</div>
+            <a href="/admin/employees" class="sidebar-link {% if active_page == 'employees' %}active{% endif %}">
+                <span class="link-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span> Employee Access
+            </a>
+            <a href="/admin/audit" class="sidebar-link {% if active_page == 'audit' %}active{% endif %}">
+                <span class="link-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span> Audit Logs
+            </a>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar">A</div>
+                <div>
+                    <div class="sidebar-user-name">Admin Owner</div>
+                    <div class="sidebar-user-role">Super Admin</div>
+                </div>
+                <a href="/admin/login" class="sidebar-logout" title="Logout">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="admin-main">
+        <!-- Topbar -->
+        <header class="admin-topbar">
+            <button class="topbar-toggle" id="topbarToggle" aria-label="Toggle sidebar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+            </button>
+
+            <span class="topbar-title">{% block topbar_title %}Dashboard{% endblock %}</span>
+
+            <div class="topbar-search">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input type="search" placeholder="Search...">
+            </div>
+
+            <div class="topbar-actions">
+                <button class="topbar-btn" title="Notifications">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    <span class="topbar-notif-dot"></span>
+                </button>
+                <button class="topbar-btn" title="Settings">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                </button>
+                <div class="topbar-divider"></div>
+                <div class="topbar-user">
+                    <div class="topbar-avatar">A</div>
+                    <div>
+                        <div class="topbar-user-name">Admin</div>
+                        <div class="topbar-user-role">Super Admin</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <main class="admin-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</div>
+
+<!-- Modal root -->
+{% block modals %}{% endblock %}
+
+<script src="/static/js/admin.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

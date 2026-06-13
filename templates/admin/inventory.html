@@ -1,0 +1,200 @@
+{% extends "admin/base.html" %}
+{% block title %}Inventory{% endblock %}
+{% block topbar_title %}Inventory Monitoring{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Inventory</h1>
+        <p>Monitor stock levels and reorder thresholds across all products</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-outline btn-sm">Export CSV</button>
+        <button class="btn btn-primary btn-sm" id="adjustStockBtn">+ Adjust Stock</button>
+    </div>
+</div>
+
+<!-- Alert cards -->
+<div class="stats-grid">
+    <div class="card" style="padding:1rem;border-left:4px solid var(--ad-red);">
+        <div style="font-size:.75rem;color:var(--ad-muted);font-weight:700;text-transform:uppercase;margin-bottom:.25rem;">Critical (&lt;10)</div>
+        <div style="font-size:1.75rem;font-weight:700;color:var(--ad-red);">2</div>
+        <div style="font-size:.8rem;color:var(--ad-muted);">products need reorder now</div>
+    </div>
+    <div class="card" style="padding:1rem;border-left:4px solid var(--ad-yellow);">
+        <div style="font-size:.75rem;color:var(--ad-muted);font-weight:700;text-transform:uppercase;margin-bottom:.25rem;">Low Stock (&lt;25)</div>
+        <div style="font-size:1.75rem;font-weight:700;color:var(--ad-yellow);">5</div>
+        <div style="font-size:.8rem;color:var(--ad-muted);">products running low</div>
+    </div>
+    <div class="card" style="padding:1rem;border-left:4px solid var(--ad-green);">
+        <div style="font-size:.75rem;color:var(--ad-muted);font-weight:700;text-transform:uppercase;margin-bottom:.25rem;">Healthy Stock</div>
+        <div style="font-size:1.75rem;font-weight:700;color:var(--ad-green);">{{ products | length - 7 }}</div>
+        <div style="font-size:.8rem;color:var(--ad-muted);">products sufficiently stocked</div>
+    </div>
+    <div class="card" style="padding:1rem;border-left:4px solid var(--ad-blue);">
+        <div style="font-size:.75rem;color:var(--ad-muted);font-weight:700;text-transform:uppercase;margin-bottom:.25rem;">Total SKUs</div>
+        <div style="font-size:1.75rem;font-weight:700;color:var(--ad-blue);">{{ products | length }}</div>
+        <div style="font-size:.8rem;color:var(--ad-muted);">active product listings</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="filter-bar">
+        <div class="filter-search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="search" id="invSearch" placeholder="Search product...">
+        </div>
+        <select class="filter-select" id="invStockFilter" title="Filter by stock level" aria-label="Filter by stock level">
+            <option value="">All Levels</option>
+            <option value="critical">Critical (&lt;10)</option>
+            <option value="low">Low (&lt;25)</option>
+            <option value="ok">Healthy</option>
+        </select>
+        <select class="filter-select" id="invCatFilter" title="Filter by category" aria-label="Filter by category">
+            <option value="">All Categories</option>
+            {% for cat in categories %}
+            <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="table-wrap">
+        <table class="admin-table" id="invTable">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Brand</th>
+                    <th>In Stock</th>
+                    <th>Stock Level</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                <tr data-name="{{ p.name | lower }}" data-cat="{{ p.category }}" data-stock="{{ p.stock }}">
+                    <td>
+                        <div class="td-product">
+                            <div class="td-product-img" style="background:var(--ad-bg);border-radius:8px;font-size:.9rem;width:36px;height:30px;display:grid;place-items:center;">🔩</div>
+                            <div>
+                                <div class="td-product-name">{{ p.name[:45] }}{% if p.name|length > 45 %}…{% endif %}</div>
+                                <div class="td-product-brand">SKU: {{ p.id[:16].upper() }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="badge badge-blue">{{ p.category | capitalize }}</span></td>
+                    <td style="font-weight:500;">{{ p.brand }}</td>
+                    <td>
+                        <span class="font-bold {% if p.stock < 10 %}text-red{% elif p.stock < 25 %}text-accent{% else %}text-green{% endif %}">
+                            {{ p.stock }} units
+                        </span>
+                    </td>
+                    <td style="min-width:160px;">
+                        {% set pct = [(p.stock / 200 * 100) | round | int, 100] | min %}
+                        <div class="stock-bar-wrap">
+                            <div class="stock-bar-track" style="flex:1;">
+                                <div class="stock-bar-fill {% if p.stock < 10 %}low{% elif p.stock < 25 %}medium{% endif %}" style="width:{{ pct }}%;"></div>
+                            </div>
+                            <span class="stock-bar-num">{{ pct }}%</span>
+                        </div>
+                    </td>
+                    <td>
+                        {% if p.stock == 0 %}
+                        <span class="badge badge-red">Out of Stock</span>
+                        {% elif p.stock < 10 %}
+                        <span class="badge badge-red">Critical</span>
+                        {% elif p.stock < 25 %}
+                        <span class="badge badge-yellow">Low Stock</span>
+                        {% else %}
+                        <span class="badge badge-green">Healthy</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="btn btn-xs btn-primary adjust-btn" data-name="{{ p.name[:30] }}">Adjust</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="admin-modal-overlay" id="adjustModal">
+    <div class="admin-modal" style="max-width:420px;">
+        <div class="admin-modal-header">
+            <h3>Adjust Stock</h3>
+            <button class="modal-close-btn" data-close-modal="adjustModal">&times;</button>
+        </div>
+        <div class="admin-modal-body">
+            <div class="form-group" style="margin-bottom:1rem;">
+                <label class="form-label" for="adjProductName">Product</label>
+                <input class="form-input" type="text" id="adjProductName" aria-label="Product name" readonly>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Adjustment Type</label>
+                    <select class="form-select" title="Adjustment type" aria-label="Adjustment type">
+                        <option>Add Stock</option>
+                        <option>Remove Stock</option>
+                        <option>Set Exact</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Quantity</label>
+                    <input class="form-input" type="number" placeholder="0" min="0">
+                </div>
+                <div class="form-group full">
+                    <label class="form-label">Reason / Notes</label>
+                    <input class="form-input" type="text" placeholder="e.g. Supplier delivery, Damage write-off">
+                </div>
+            </div>
+        </div>
+        <div class="admin-modal-footer">
+            <button class="btn btn-outline" data-close-modal="adjustModal">Cancel</button>
+            <button class="btn btn-primary" id="saveAdjBtn">Save Adjustment</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('adjustStockBtn')?.addEventListener('click', () => {
+    document.getElementById('adjProductName').value = '';
+    AdminUI.openModal('adjustModal');
+});
+document.querySelectorAll('.adjust-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.getElementById('adjProductName').value = btn.dataset.name;
+        AdminUI.openModal('adjustModal');
+    });
+});
+document.getElementById('saveAdjBtn').addEventListener('click', () => {
+    AdminUI.closeModal('adjustModal');
+    AdminUI.toast('Stock updated successfully!', 'success');
+});
+// Filters
+const invSearch = document.getElementById('invSearch');
+const invSF = document.getElementById('invStockFilter');
+const invCF = document.getElementById('invCatFilter');
+function filterInv() {
+    const q = invSearch.value.toLowerCase();
+    const sf = invSF.value;
+    const cf = invCF.value;
+    document.querySelectorAll('#invTable tbody tr').forEach(row => {
+        let show = row.dataset.name.includes(q);
+        if (cf && row.dataset.cat !== cf) show = false;
+        const s = parseInt(row.dataset.stock, 10);
+        if (sf === 'critical' && s >= 10) show = false;
+        if (sf === 'low' && (s < 10 || s >= 25)) show = false;
+        if (sf === 'ok' && s < 25) show = false;
+        row.style.display = show ? '' : 'none';
+    });
+}
+invSearch.addEventListener('input', filterInv);
+invSF.addEventListener('change', filterInv);
+invCF.addEventListener('change', filterInv);
+</script>
+{% endblock %}

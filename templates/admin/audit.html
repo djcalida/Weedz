@@ -1,0 +1,122 @@
+{% extends "admin/base.html" %}
+{% block title %}Audit Logs{% endblock %}
+{% block topbar_title %}Audit Logs{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div><h1>Audit Logs</h1><p>Full activity trail for all admin actions</p></div>
+    <div class="page-actions">
+        <button class="btn btn-outline btn-sm">Export Logs</button>
+        <button class="btn btn-danger btn-sm" id="clearLogsBtn">Clear Old Logs</button>
+    </div>
+</div>
+
+<!-- Summary -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-icon">📜</div></div>
+        <div class="stat-value">{{ logs | length }}</div>
+        <div class="stat-label">Total Log Entries</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-icon yellow">⚠️</div></div>
+        <div class="stat-value">{{ logs | selectattr('level','eq','warning') | list | length }}</div>
+        <div class="stat-label">Warnings</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-icon red">🚨</div></div>
+        <div class="stat-value">{{ logs | selectattr('level','eq','danger') | list | length }}</div>
+        <div class="stat-label">Security Alerts</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-icon green">✓</div></div>
+        <div class="stat-value">{{ logs | selectattr('level','in',['success','info']) | list | length }}</div>
+        <div class="stat-label">Normal Actions</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="filter-bar">
+        <div class="filter-search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="search" id="logSearch" placeholder="Search action, user, target...">
+        </div>
+        <select class="filter-select" id="logLevelFilter" title="Filter by level" aria-label="Filter by level">
+            <option value="">All Levels</option>
+            <option value="info">Info</option>
+            <option value="success">Success</option>
+            <option value="warning">Warning</option>
+            <option value="danger">Security Alert</option>
+        </select>
+        <select class="filter-select" id="logUserFilter" title="Filter by user" aria-label="Filter by user">
+            <option value="">All Users</option>
+            {% set users = logs | map(attribute='user') | unique | list %}
+            {% for u in users %}
+            <option value="{{ u }}">{{ u }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="table-wrap">
+        <table class="admin-table" id="logTable">
+            <thead>
+                <tr><th>#</th><th>User</th><th>Action</th><th>Target</th><th>Timestamp</th><th>IP Address</th><th>Level</th></tr>
+            </thead>
+            <tbody id="logBody">
+                {% for log in logs %}
+                <tr data-action="{{ log.action | lower }}" data-user="{{ log.user | lower }}" data-level="{{ log.level }}">
+                    <td class="text-muted text-sm">{{ log.id }}</td>
+                    <td>
+                        <div class="td-customer">
+                            <div class="td-avatar" style="width:28px;height:28px;font-size:.7rem;">{{ log.user[0] }}</div>
+                            <span style="font-weight:600;font-size:.875rem;">{{ log.user }}</span>
+                        </div>
+                    </td>
+                    <td style="font-size:.875rem;">{{ log.action }}</td>
+                    <td style="font-size:.8rem;color:var(--ad-muted);">{{ log.target }}</td>
+                    <td class="text-muted text-sm" style="white-space:nowrap;">{{ log.time }}</td>
+                    <td style="font-family:monospace;font-size:.8rem;color:var(--ad-muted);">{{ log.ip }}</td>
+                    <td>
+                        <span class="badge {% if log.level == 'success' %}badge-green{% elif log.level == 'warning' %}badge-yellow{% elif log.level == 'danger' %}badge-red{% else %}badge-blue{% endif %}">
+                            {{ log.level | capitalize }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="pagination">
+        <span style="font-size:.8rem;color:var(--ad-muted);margin-right:auto;">Showing {{ logs | length }} entries</span>
+        <button class="page-btn" disabled>← Prev</button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn">Next →</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('clearLogsBtn').addEventListener('click', () => {
+    if (confirm('Clear all logs older than 30 days? This cannot be undone.')) {
+        AdminUI.toast('Old logs cleared.', 'warning');
+    }
+});
+const ls = document.getElementById('logSearch');
+const llf = document.getElementById('logLevelFilter');
+const luf = document.getElementById('logUserFilter');
+function filterLogs() {
+    const q = ls.value.toLowerCase();
+    const lf = llf.value;
+    const uf = luf.value;
+    document.querySelectorAll('#logBody tr').forEach(row => {
+        let show = row.dataset.action.includes(q);
+        if (lf && row.dataset.level !== lf) show = false;
+        if (uf && row.dataset.user !== uf.toLowerCase()) show = false;
+        row.style.display = show ? '' : 'none';
+    });
+}
+ls.addEventListener('input', filterLogs);
+llf.addEventListener('change', filterLogs);
+luf.addEventListener('change', filterLogs);
+</script>
+{% endblock %}

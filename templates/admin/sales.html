@@ -1,0 +1,143 @@
+{% extends "admin/base.html" %}
+{% block title %}Sales Report{% endblock %}
+{% block topbar_title %}Sales Reporting{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div><h1>Sales Report</h1><p>Revenue breakdown and performance metrics</p></div>
+    <div class="page-actions">
+        <select class="filter-select" title="Select period" aria-label="Select period">
+            <option>This Year (2026)</option><option>Last Year (2025)</option>
+        </select>
+        <button class="btn btn-outline btn-sm">Export PDF</button>
+        <button class="btn btn-primary btn-sm">Export CSV</button>
+    </div>
+</div>
+
+<!-- KPI row -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-icon">💰</div><span class="stat-trend up">+12.4%</span></div>
+        <div class="stat-value">₱1.34M</div>
+        <div class="stat-label">Total Revenue (YTD)</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-icon blue">📦</div><span class="stat-trend up">+8.7%</span></div>
+        <div class="stat-value">263</div>
+        <div class="stat-label">Total Orders (YTD)</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-icon green">📊</div><span class="stat-trend up">+3.2%</span></div>
+        <div class="stat-value">₱5,118</div>
+        <div class="stat-label">Avg. Order Value</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-icon yellow">↩️</div><span class="stat-trend down">−1.2%</span></div>
+        <div class="stat-value">2.9%</div>
+        <div class="stat-label">Return Rate</div>
+    </div>
+</div>
+
+<!-- Revenue chart -->
+<div class="card" style="margin-bottom:1.25rem;">
+    <div class="card-header">
+        <div class="card-title">Monthly Revenue vs Orders</div>
+        <div style="display:flex;gap:.5rem;">
+            <button class="btn btn-xs btn-outline tab-toggle-btn active" data-tab="revenue">Revenue</button>
+            <button class="btn btn-xs btn-outline tab-toggle-btn" data-tab="orders">Orders</button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="chart-area">
+            <div class="chart-bars" id="salesChart">
+                {% set max_rev = sales_monthly | map(attribute='revenue') | max %}
+                {% set max_ord = sales_monthly | map(attribute='orders') | max %}
+                {% for row in sales_monthly %}
+                {% set rev_pct = (row.revenue / max_rev * 100) | round | int %}
+                {% set ord_pct = (row.orders / max_ord * 100) | round | int %}
+                <div class="chart-bar-wrap">
+                    <div class="chart-bar revenue-bar" style="height:{{ rev_pct }}%;" title="₱{{ '{:,}'.format(row.revenue) }}"></div>
+                    <div class="chart-bar secondary orders-bar" style="height:{{ ord_pct }}%;display:none;" title="{{ row.orders }} orders"></div>
+                    <div class="chart-label">{{ row.month }}</div>
+                    <div class="chart-value rev-val">₱{{ '{:,}'.format((row.revenue / 1000) | round | int) }}K</div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="chart-legend">
+                <div class="legend-item"><div class="legend-dot orange"></div>Revenue (₱)</div>
+                <div class="legend-item"><div class="legend-dot blue"></div>Orders (count)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monthly table + Category breakdown -->
+<div style="display:grid;grid-template-columns:3fr 2fr;gap:1.25rem;">
+    <div class="card">
+        <div class="card-header"><div class="card-title">Monthly Breakdown</div></div>
+        <div class="table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr><th>Month</th><th>Revenue</th><th>Orders</th><th>Returns</th><th>Avg Order</th><th>Growth</th></tr>
+                </thead>
+                <tbody>
+                    {% for i, row in sales_monthly | enumerate() %}
+                    {% set prev = sales_monthly[i-1].revenue if i > 0 else row.revenue %}
+                    {% set growth = ((row.revenue - prev) / prev * 100) | round(1) if i > 0 else 0 %}
+                    <tr>
+                        <td class="font-bold">{{ row.month }} 2026</td>
+                        <td class="font-bold text-accent">₱{{ '{:,}'.format(row.revenue) }}</td>
+                        <td>{{ row.orders }}</td>
+                        <td class="text-red">{{ row.returns }}</td>
+                        <td>₱{{ '{:,}'.format((row.revenue // row.orders)) }}</td>
+                        <td>
+                            {% if i == 0 %}—
+                            {% elif growth >= 0 %}<span class="text-green">+{{ growth }}%</span>
+                            {% else %}<span class="text-red">{{ growth }}%</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><div class="card-title">Revenue by Category</div></div>
+        <div class="card-body">
+            <div class="donut-wrap" style="justify-content:center;margin-bottom:1.5rem;">
+                <div class="donut-chart"><div class="donut-hole">100%</div></div>
+                <div class="donut-legend">
+                    <div class="donut-legend-item"><div class="donut-dot" style="background:var(--ad-accent)"></div>Brakes — 28%</div>
+                    <div class="donut-legend-item"><div class="donut-dot" style="background:var(--ad-blue)"></div>Engine — 22%</div>
+                    <div class="donut-legend-item"><div class="donut-dot" style="background:var(--ad-green)"></div>Electrical — 18%</div>
+                    <div class="donut-legend-item"><div class="donut-dot" style="background:var(--ad-yellow)"></div>Suspension — 14%</div>
+                    <div class="donut-legend-item"><div class="donut-dot" style="background:var(--ad-purple)"></div>Others — 18%</div>
+                </div>
+            </div>
+            {% set cat_data = [('Brakes','badge-orange',28,374696),('Engine','badge-blue',22,295854),('Electrical','badge-green',18,242226),('Suspension','badge-yellow',14,188398),('Performance','badge-gray',10,134570),('Others','badge-gray',8,107656)] %}
+            {% for name, badge, pct, rev in cat_data %}
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.4rem 0;border-bottom:1px solid var(--ad-border);font-size:.85rem;">
+                <span><span class="badge {{ badge }}">{{ name }}</span></span>
+                <span class="font-bold">₱{{ '{:,}'.format(rev) }}</span>
+                <span class="text-muted">{{ pct }}%</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.tab-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+        document.querySelectorAll('.tab-toggle-btn').forEach(b => b.classList.remove('active', 'btn-dark'));
+        this.classList.add('active');
+        const tab = this.dataset.tab;
+        document.querySelectorAll('.revenue-bar,.rev-val').forEach(el => el.style.display = tab === 'revenue' ? '' : 'none');
+        document.querySelectorAll('.orders-bar').forEach(el => el.style.display = tab === 'orders' ? '' : 'none');
+    });
+});
+</script>
+{% endblock %}

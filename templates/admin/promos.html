@@ -1,0 +1,162 @@
+{% extends "admin/base.html" %}
+{% block title %}Promo Codes{% endblock %}
+{% block topbar_title %}Promo Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div><h1>Promo Codes</h1><p>{{ promos | length }} codes — {{ promos | selectattr('status','eq','Active') | list | length }} currently active</p></div>
+    <div class="page-actions">
+        <button class="btn btn-primary btn-sm" id="addPromoBtn">+ Create Promo</button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="filter-bar">
+        <div class="filter-search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="search" id="promoSearch" placeholder="Search code or description...">
+        </div>
+        <select class="filter-select" id="promoStatusFilter" title="Filter by status" aria-label="Filter by status">
+            <option value="">All Statuses</option>
+            <option>Active</option><option>Expired</option>
+        </select>
+        <select class="filter-select" id="promoTypeFilter" title="Filter by type" aria-label="Filter by type">
+            <option value="">All Types</option>
+            <option>Percentage</option><option>Fixed</option><option>Free Ship</option>
+        </select>
+    </div>
+    <div class="table-wrap">
+        <table class="admin-table" id="promoTable">
+            <thead>
+                <tr><th>Code</th><th>Type</th><th>Value</th><th>Min. Order</th><th>Uses</th><th>Limit</th><th>Expiry</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="promoBody">
+                {% for p in promos %}
+                <tr data-code="{{ p.id | lower }}" data-desc="{{ p.desc | lower }}" data-status="{{ p.status }}" data-type="{{ p.type }}">
+                    <td>
+                        <span class="promo-code-tag">{{ p.id }}</span>
+                    </td>
+                    <td><span class="badge badge-blue">{{ p.type }}</span></td>
+                    <td class="font-bold">
+                        {% if p.type == 'Percentage' %}{{ p.value }}%
+                        {% elif p.type == 'Free Ship' %}Free
+                        {% else %}₱{{ p.value }}{% endif %}
+                    </td>
+                    <td>{% if p.min_order > 0 %}₱{{ '{:,}'.format(p.min_order) }}{% else %}None{% endif %}</td>
+                    <td>
+                        <div class="flex items-center gap-1">
+                            <div class="stock-bar-track promo-bar-track">
+                                <div class="stock-bar-fill {% if p.uses >= p.limit %}low{% elif p.uses >= p.limit * 0.8 %}medium{% endif %}" data-pct="{{ (p.uses / p.limit * 100) | round | int }}"></div>
+                            </div>
+                            <span class="text-sm">{{ p.uses }}</span>
+                        </div>
+                    </td>
+                    <td class="text-muted">{{ p.limit }}</td>
+                    <td class="text-sm text-muted">{{ p.expiry }}</td>
+                    <td>
+                        <span class="badge {% if p.status == 'Active' %}badge-green{% else %}badge-red{% endif %}">{{ p.status }}</span>
+                    </td>
+                    <td>
+                        <div class="flex gap-1">
+                            <button class="btn btn-xs btn-outline edit-promo-btn" data-code="{{ p.id }}">Edit</button>
+                            <button class="btn btn-xs btn-danger del-promo-btn">Del</button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="admin-modal-overlay" id="promoModal">
+    <div class="admin-modal">
+        <div class="admin-modal-header">
+            <h3 id="promoModalTitle">Create Promo Code</h3>
+            <button class="modal-close-btn" data-close-modal="promoModal">&times;</button>
+        </div>
+        <div class="admin-modal-body">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Promo Code</label>
+                    <input class="form-input promo-code-input" id="promoCode" type="text" placeholder="e.g. SAVE20">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Type</label>
+                    <select class="form-select" id="promoType" title="Promo type" aria-label="Promo type">
+                        <option>Percentage</option><option>Fixed</option><option>Free Ship</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Discount Value</label>
+                    <input class="form-input" type="number" placeholder="e.g. 15 for 15%" min="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Minimum Order (₱)</label>
+                    <input class="form-input" type="number" placeholder="0 = no minimum" min="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Usage Limit</label>
+                    <input class="form-input" type="number" placeholder="e.g. 100">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Expiry Date</label>
+                    <input class="form-input" type="date" id="promoExpiry" aria-label="Expiry date">
+                </div>
+                <div class="form-group full">
+                    <label class="form-label">Description</label>
+                    <input class="form-input" type="text" placeholder="e.g. Summer sale 15% off">
+                </div>
+            </div>
+        </div>
+        <div class="admin-modal-footer">
+            <button class="btn btn-outline" data-close-modal="promoModal">Cancel</button>
+            <button class="btn btn-primary" id="savePromoBtn">Save Promo</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.promo-bar-track .stock-bar-fill[data-pct]').forEach(el => {
+    el.style.width = el.dataset.pct + '%';
+});
+document.getElementById('addPromoBtn').addEventListener('click', () => {
+    document.getElementById('promoModalTitle').textContent = 'Create Promo Code';
+    AdminUI.openModal('promoModal');
+});
+document.querySelectorAll('.edit-promo-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.getElementById('promoModalTitle').textContent = 'Edit Promo — ' + btn.dataset.code;
+        AdminUI.openModal('promoModal');
+    });
+});
+document.querySelectorAll('.del-promo-btn').forEach(btn => {
+    btn.addEventListener('click', () => AdminUI.toast('Promo code deleted.', 'warning'));
+});
+document.getElementById('savePromoBtn').addEventListener('click', () => {
+    AdminUI.closeModal('promoModal');
+    AdminUI.toast('Promo code saved!', 'success');
+});
+const ps = document.getElementById('promoSearch');
+const psf = document.getElementById('promoStatusFilter');
+const ptf = document.getElementById('promoTypeFilter');
+function filterPromos() {
+    const q = ps.value.toLowerCase();
+    const sf = psf.value;
+    const tf = ptf.value;
+    document.querySelectorAll('#promoBody tr').forEach(row => {
+        let show = row.dataset.code.includes(q) || row.dataset.desc.includes(q);
+        if (sf && row.dataset.status !== sf) show = false;
+        if (tf && row.dataset.type !== tf) show = false;
+        row.style.display = show ? '' : 'none';
+    });
+}
+ps.addEventListener('input', filterPromos);
+psf.addEventListener('change', filterPromos);
+ptf.addEventListener('change', filterPromos);
+</script>
+{% endblock %}

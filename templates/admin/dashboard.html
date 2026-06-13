@@ -1,0 +1,334 @@
+{% extends "admin/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block topbar_title %}Dashboard Overview{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Dashboard page-specific component styles */
+.recent-row {
+    display:flex; align-items:center; gap:.85rem;
+    padding:.8rem 1.35rem; border-bottom:1px solid #f8fafc;
+    transition:background .12s;
+}
+.recent-row:last-child { border-bottom:none; }
+.recent-row:hover { background:#f8fafc; }
+.recent-oid { font-size:.78rem; font-weight:700; color:var(--ad-accent); min-width:80px; }
+.recent-name { font-size:.85rem; font-weight:600; }
+.recent-date { font-size:.73rem; color:#94a3b8; }
+
+.top-product-row {
+    display:flex; align-items:center; gap:.85rem;
+    padding:.8rem 1.35rem; border-bottom:1px solid #f8fafc; transition:background .12s;
+}
+.top-product-row:last-child { border-bottom:none; }
+.top-product-row:hover { background:#f8fafc; }
+.tp-rank  { font-size:.7rem; font-weight:800; color:#cbd5e1; min-width:18px; }
+.tp-img   { width:38px; height:30px; border-radius:7px; background:#f1f5f9; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:.9rem; }
+.tp-name  { font-size:.825rem; font-weight:600; line-height:1.3; }
+.tp-brand { font-size:.72rem; color:#94a3b8; }
+.tp-price { font-size:.85rem; font-weight:700; color:#0f172a; white-space:nowrap; }
+.tp-stock { font-size:.7rem; color:#94a3b8; }
+
+@media (max-width: 768px) {
+    .recent-oid { min-width: 60px; }
+    .recent-row  { padding: .65rem 1rem; }
+    .top-product-row { padding: .65rem 1rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Good afternoon, Admin 👋</h1>
+        <p>Here's what's happening with Wedzz Motorparts today — Jun 13, 2026</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-outline btn-sm">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export Report
+        </button>
+        <a href="/admin/products" class="btn btn-primary btn-sm">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Product
+        </a>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="kpi-grid">
+    {% set kpis = [
+        ('total_revenue',   'orange', '💰'),
+        ('total_orders',    'blue',   '📦'),
+        ('total_customers', 'green',  '👥'),
+        ('avg_order_value', 'purple', '📊'),
+    ] %}
+    {% for key, accent, icon in kpis %}
+    {% set stat = stats[key] %}
+    <div class="kpi-card kpi-{{ accent }}">
+        <div class="kpi-card-accent"></div>
+        <div class="kpi-top">
+            <div class="kpi-icon-box">
+                <span class="kpi-icon-emoji">{{ icon }}</span>
+            </div>
+            <span class="kpi-badge {{ stat.trend }}">{{ stat.change }}</span>
+        </div>
+        <div class="kpi-num">{{ stat.value }}</div>
+        <div class="kpi-label">{{ stat.label }}</div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Second KPI row: operational -->
+<div class="kpi-grid">
+    {% set kpis2 = [
+        ('total_products',  'dark',   '🔩'),
+        ('pending_orders',  'yellow', '⏳'),
+        ('low_stock',       'red',    '⚠️'),
+        ('refund_requests', 'teal',   '↩️'),
+    ] %}
+    {% for key, accent, icon in kpis2 %}
+    {% set stat = stats[key] %}
+    <div class="kpi-card kpi-{{ accent }}">
+        <div class="kpi-card-accent"></div>
+        <div class="kpi-top">
+            <div class="kpi-icon-box">
+                <span class="kpi-icon-emoji">{{ icon }}</span>
+            </div>
+            <span class="kpi-badge {{ stat.trend }}">{{ stat.change }}</span>
+        </div>
+        <div class="kpi-num">{{ stat.value }}</div>
+        <div class="kpi-label">{{ stat.label }}</div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Charts row -->
+<div class="charts-row">
+    <!-- Revenue chart -->
+    <div class="section-card">
+        <div class="sc-header">
+            <div>
+                <div class="sc-title">Revenue Overview</div>
+                <div class="sc-sub">Monthly revenue & orders — 2026</div>
+            </div>
+            <div class="sc-header-actions">
+                <div class="chart-legend">
+                    <div class="legend-item"><div class="legend-dot orange"></div>Revenue</div>
+                    <div class="legend-item"><div class="legend-dot blue"></div>Orders</div>
+                </div>
+                <select class="filter-select filter-select-sm" title="Select year" aria-label="Select year">
+                    <option>2026</option><option>2025</option>
+                </select>
+            </div>
+        </div>
+        <div class="chart-body">
+            <canvas id="revenueChart" height="200"></canvas>
+        </div>
+    </div>
+
+    <!-- Orders by status donut -->
+    <div class="section-card">
+        <div class="sc-header">
+            <div>
+                <div class="sc-title">Orders by Status</div>
+                <div class="sc-sub">All time breakdown</div>
+            </div>
+        </div>
+        <div class="donut-body">
+            <div class="donut-wrap">
+                <canvas id="statusDonut" width="140" height="140"></canvas>
+                <div class="donut-center">
+                    <span class="donut-total">263</span>
+                    <span class="donut-label">TOTAL</span>
+                </div>
+            </div>
+            <div class="donut-legend">
+                {% set status_items = [('Delivered','delivered',118),('Shipped','shipped',71),('Processing','processing',42),('Cancelled','cancelled',32)] %}
+                {% for label, cls, count in status_items %}
+                <div class="donut-row">
+                    <div class="donut-row-left">
+                        <div class="donut-dot donut-dot-{{ cls }}"></div>
+                        <span class="donut-name">{{ label }}</span>
+                    </div>
+                    <div class="donut-row-right">
+                        <div class="donut-bar-track">
+                            <div class="donut-bar-fill donut-bar-{{ cls }}" data-pct="{{ (count/263*100)|round|int }}"></div>
+                        </div>
+                        <span class="donut-count">{{ count }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom row -->
+<div class="bottom-row">
+    <!-- Recent orders -->
+    <div class="section-card">
+        <div class="sc-header">
+            <div>
+                <div class="sc-title">Recent Orders</div>
+                <div class="sc-sub">Latest {{ recent_orders|length }} transactions</div>
+            </div>
+            <a href="/admin/orders" class="btn btn-outline btn-xs">View All →</a>
+        </div>
+        <div>
+            {% for order in recent_orders %}
+            <div class="recent-row">
+                <span class="recent-oid">#{{ order.id }}</span>
+                <div class="recent-customer">
+                    <div class="recent-avatar">{{ order.customer[0] }}</div>
+                    <div>
+                        <div class="recent-name">{{ order.customer }}</div>
+                        <div class="recent-date">{{ order.date }}</div>
+                    </div>
+                </div>
+                <span class="badge {% if order.status == 'Delivered' %}badge-green{% elif order.status == 'Shipped' %}badge-blue{% elif order.status == 'Processing' %}badge-yellow{% elif order.status == 'Cancelled' %}badge-red{% else %}badge-purple{% endif %} badge-sm">
+                    {{ order.status }}
+                </span>
+                <span class="recent-total">₱{{ '{:,}'.format(order.total) }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Top products -->
+    <div class="section-card">
+        <div class="sc-header">
+            <div>
+                <div class="sc-title">Top Products</div>
+                <div class="sc-sub">By review count</div>
+            </div>
+            <a href="/admin/products" class="btn btn-outline btn-xs">Manage →</a>
+        </div>
+        <div>
+            {% for product in top_products %}
+            <div class="top-product-row">
+                <span class="tp-rank">0{{ loop.index }}</span>
+                <div class="tp-img">🔩</div>
+                <div class="tp-info">
+                    <div class="tp-name">{{ product.name[:38] }}{% if product.name|length > 38 %}…{% endif %}</div>
+                    <div class="tp-brand">{{ product.brand }}</div>
+                </div>
+                <div class="tp-meta">
+                    <div class="tp-price">₱{{ '{:,}'.format(product.price) }}</div>
+                    <div class="tp-stock">{{ product.stock }} left</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script type="application/json" id="dash-data">{{ {'months': sales_monthly | map(attribute='month') | list, 'revenues': sales_monthly | map(attribute='revenue') | list, 'orders': sales_monthly | map(attribute='orders') | list} | tojson }}</script>
+<script>
+(function () {
+    const _d      = JSON.parse(document.getElementById('dash-data').textContent);
+    const months   = _d.months;
+    const revenues = _d.revenues;
+    const orders   = _d.orders;
+
+    // Apply donut bar widths from data-pct attributes
+    document.querySelectorAll('.donut-bar-fill[data-pct]').forEach(el => {
+        el.style.width = el.dataset.pct + '%';
+    });
+
+    // Revenue + Orders bar+line chart
+    const revCtx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(revCtx, {
+        data: {
+            labels: months,
+            datasets: [
+                {
+                    type: 'bar',
+                    label: 'Revenue (₱)',
+                    data: revenues,
+                    backgroundColor: 'rgba(249,115,22,.15)',
+                    borderColor: '#f97316',
+                    borderWidth: 2,
+                    borderRadius: 6,
+                    borderSkipped: false,
+                    yAxisID: 'y',
+                },
+                {
+                    type: 'line',
+                    label: 'Orders',
+                    data: orders,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59,130,246,.08)',
+                    borderWidth: 2.5,
+                    pointBackgroundColor: '#3b82f6',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.45,
+                    fill: true,
+                    yAxisID: 'y1',
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#fff',
+                    titleColor: '#0f172a',
+                    bodyColor: '#64748b',
+                    borderColor: '#e2e8f0',
+                    borderWidth: 1,
+                    padding: 10,
+                    callbacks: {
+                        label: ctx => ctx.datasetIndex === 0
+                            ? `  Revenue: ₱${ctx.raw.toLocaleString()}`
+                            : `  Orders: ${ctx.raw}`
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#94a3b8' } },
+                y: {
+                    position: 'left',
+                    grid: { color: '#f1f5f9' },
+                    ticks: {
+                        font: { size: 11 }, color: '#94a3b8',
+                        callback: v => '₱' + (v/1000).toFixed(0) + 'K'
+                    }
+                },
+                y1: {
+                    position: 'right',
+                    grid: { display: false },
+                    ticks: { font: { size: 11 }, color: '#94a3b8' }
+                }
+            }
+        }
+    });
+
+    // Status donut
+    const donutCtx = document.getElementById('statusDonut').getContext('2d');
+    new Chart(donutCtx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [118, 71, 42, 32],
+                backgroundColor: ['#22c55e','#3b82f6','#eab308','#ef4444'],
+                borderWidth: 0,
+                hoverOffset: 4,
+            }]
+        },
+        options: {
+            responsive: false,
+            cutout: '72%',
+            plugins: { legend: { display: false }, tooltip: { enabled: false } }
+        }
+    });
+})();
+</script>
+{% endblock %}

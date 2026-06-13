@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login — Wedzz Motorparts</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body class="admin-body">
+<div class="admin-login-page">
+    <div class="login-left">
+        <div class="login-left-content">
+            <div class="login-left-logo">
+                <div class="login-left-logo-icon">W</div>
+                <div>
+                    <div class="login-left-logo-text">Wedzz Motorparts</div>
+                    <div class="login-left-logo-sub">Admin Panel</div>
+                </div>
+            </div>
+            <h1>Manage your store with confidence.</h1>
+            <p>Full control over products, orders, inventory, customers, and your team — all in one place.</p>
+            <div class="login-feature-list">
+                <div class="login-feature"><div class="login-feature-icon">📊</div> Real-time dashboard analytics</div>
+                <div class="login-feature"><div class="login-feature-icon">📦</div> Order & inventory management</div>
+                <div class="login-feature"><div class="login-feature-icon">👥</div> Customer & employee access roles</div>
+                <div class="login-feature"><div class="login-feature-icon">📜</div> Full audit trail & logs</div>
+            </div>
+        </div>
+    </div>
+    <div class="login-right">
+        <div class="login-form-card">
+            <h2>Admin Sign In</h2>
+            <p>Enter your credentials to access the dashboard.</p>
+            <form class="admin-login-form" action="/admin" method="get">
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <div class="input-icon-wrap">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        <input class="form-input" type="email" placeholder="admin@wedzz.com" value="admin@wedzz.com">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <div class="input-icon-wrap">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <input class="form-input" type="password" placeholder="••••••••" value="admin123">
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;font-size:.85rem;">
+                    <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;">
+                        <input type="checkbox" checked> Remember me
+                    </label>
+                    <a href="#" style="color:var(--ad-accent);font-weight:600;">Forgot password?</a>
+                </div>
+                <button class="btn btn-primary w-full" type="submit" style="margin-top:.5rem;padding:.75rem;">
+                    Sign In to Dashboard
+                </button>
+            </form>
+            <p style="text-align:center;font-size:.8rem;color:var(--ad-muted);margin-top:1.5rem;">
+                Demo: <strong>admin@wedzz.com</strong> / <strong>admin123</strong>
+            </p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

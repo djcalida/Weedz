@@ -1,0 +1,144 @@
+{% extends "admin/base.html" %}
+{% block title %}Customers{% endblock %}
+{% block topbar_title %}Customer Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div><h1>Customers</h1><p>{{ customers | length }} registered customers</p></div>
+    <div class="page-actions">
+        <button class="btn btn-outline btn-sm">Export CSV</button>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-icon">👥</div><span class="stat-trend up">+23.1%</span></div>
+        <div class="stat-value">1,842</div>
+        <div class="stat-label">Total Customers</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-icon purple">⭐</div><span class="stat-trend up">+4</span></div>
+        <div class="stat-value">{{ customers | selectattr('status','eq','VIP') | list | length }}</div>
+        <div class="stat-label">VIP Customers</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-icon green">✓</div><span class="stat-trend up">+18</span></div>
+        <div class="stat-value">{{ customers | selectattr('status','eq','Active') | list | length }}</div>
+        <div class="stat-label">Active Customers</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-icon yellow">💤</div><span class="stat-trend down">+2</span></div>
+        <div class="stat-value">{{ customers | selectattr('status','eq','Inactive') | list | length }}</div>
+        <div class="stat-label">Inactive</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="filter-bar">
+        <div class="filter-search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="search" id="custSearch" placeholder="Search by name or email...">
+        </div>
+        <select class="filter-select" id="custStatusFilter" title="Filter by status" aria-label="Filter by status">
+            <option value="">All Statuses</option>
+            <option>Active</option><option>VIP</option><option>Inactive</option>
+        </select>
+    </div>
+    <div class="table-wrap">
+        <table class="admin-table" id="custTable">
+            <thead>
+                <tr><th>Customer</th><th>Phone</th><th>City</th><th>Orders</th><th>Total Spent</th><th>Status</th><th>Joined</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="custBody">
+                {% for c in customers %}
+                <tr data-name="{{ c.name | lower }}" data-email="{{ c.email | lower }}" data-status="{{ c.status }}">
+                    <td>
+                        <div class="td-customer">
+                            <div class="td-avatar">{{ c.name[0] }}</div>
+                            <div>
+                                <div class="td-name">{{ c.name }}</div>
+                                <div class="td-email">{{ c.email }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-sm text-muted">{{ c.phone }}</td>
+                    <td>{{ c.city }}</td>
+                    <td class="font-bold text-accent">{{ c.orders }}</td>
+                    <td class="font-bold">₱{{ '{:,}'.format(c.total_spent) }}</td>
+                    <td>
+                        <span class="badge {% if c.status == 'VIP' %}badge-purple{% elif c.status == 'Active' %}badge-green{% else %}badge-gray{% endif %}">
+                            {{ c.status }}
+                        </span>
+                    </td>
+                    <td class="text-muted text-sm">{{ c.joined }}</td>
+                    <td>
+                        <div class="flex gap-1">
+                            <button class="btn btn-xs btn-outline view-cust-btn" data-idx="{{ loop.index0 }}">View</button>
+                            <button class="btn btn-xs btn-outline">Orders</button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="admin-modal-overlay" id="custModal">
+    <div class="admin-modal">
+        <div class="admin-modal-header">
+            <h3>Customer Profile</h3>
+            <button class="modal-close-btn" data-close-modal="custModal">&times;</button>
+        </div>
+        <div class="admin-modal-body" id="custModalBody"></div>
+        <div class="admin-modal-footer">
+            <button class="btn btn-outline" data-close-modal="custModal">Close</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="application/json" id="cust-data">{{ customers | tojson }}</script>
+<script>
+const CUST_DATA = JSON.parse(document.getElementById('cust-data').textContent);
+document.querySelectorAll('.view-cust-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const c = CUST_DATA[parseInt(btn.dataset.idx, 10)];
+        if (!c) return;
+        document.getElementById('custModalBody').innerHTML = `
+            <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;">
+                <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--ad-accent),#ff9500);display:grid;place-items:center;font-size:1.4rem;font-weight:700;color:#fff;">${c.name[0]}</div>
+                <div>
+                    <div style="font-size:1.1rem;font-weight:700;">${c.name}</div>
+                    <div style="font-size:.85rem;color:var(--ad-muted);">${c.email}</div>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;font-size:.875rem;">
+                <div><span class="text-muted">Phone</span><br><strong>${c.phone}</strong></div>
+                <div><span class="text-muted">City</span><br><strong>${c.city}</strong></div>
+                <div><span class="text-muted">Total Orders</span><br><strong class="text-accent">${c.orders}</strong></div>
+                <div><span class="text-muted">Total Spent</span><br><strong>₱${c.total_spent.toLocaleString()}</strong></div>
+                <div><span class="text-muted">Status</span><br><strong>${c.status}</strong></div>
+                <div><span class="text-muted">Member Since</span><br><strong>${c.joined}</strong></div>
+            </div>`;
+        AdminUI.openModal('custModal');
+    });
+});
+const cs = document.getElementById('custSearch');
+const csf = document.getElementById('custStatusFilter');
+function filterCust() {
+    const q = cs.value.toLowerCase();
+    const sf = csf.value;
+    document.querySelectorAll('#custBody tr').forEach(row => {
+        let show = row.dataset.name.includes(q) || row.dataset.email.includes(q);
+        if (sf && row.dataset.status !== sf) show = false;
+        row.style.display = show ? '' : 'none';
+    });
+}
+cs.addEventListener('input', filterCust);
+csf.addEventListener('change', filterCust);
+</script>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "admin/base.html" %}
+{% block title %}Refunds & Returns{% endblock %}
+{% block topbar_title %}Refund & Return Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div><h1>Refunds & Returns</h1><p>{{ refunds | length }} total requests — {{ refunds | selectattr('status','eq','Pending') | list | length }} awaiting action</p></div>
+    <div class="page-actions">
+        <button class="btn btn-outline btn-sm">Export CSV</button>
+    </div>
+</div>
+
+{% set pending = refunds | selectattr('status','eq','Pending') | list %}
+{% if pending %}
+<div class="alert alert-warning" style="margin-bottom:1.25rem;">
+    ⚠️ <strong>{{ pending | length }} pending refund request(s)</strong> require your attention.
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="filter-bar">
+        <div class="filter-search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="search" id="refSearch" placeholder="Search by order or customer...">
+        </div>
+        <select class="filter-select" id="refStatusFilter" title="Filter by status" aria-label="Filter by status">
+            <option value="">All Statuses</option>
+            <option>Pending</option><option>Approved</option><option>Processing</option><option>Rejected</option>
+        </select>
+    </div>
+    <div class="table-wrap">
+        <table class="admin-table" id="refTable">
+            <thead>
+                <tr><th>Ref ID</th><th>Order</th><th>Customer</th><th>Amount</th><th>Reason</th><th>Date</th><th>Status</th><th>Resolution</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="refBody">
+                {% for r in refunds %}
+                <tr data-customer="{{ r.customer | lower }}" data-order="{{ r.order | lower }}" data-status="{{ r.status }}">
+                    <td class="font-bold text-sm text-accent">{{ r.id }}</td>
+                    <td><span style="font-family:monospace;font-size:.8rem;background:var(--ad-bg);padding:.15rem .5rem;border-radius:5px;">#{{ r.order }}</span></td>
+                    <td>
+                        <div class="td-customer">
+                            <div class="td-avatar">{{ r.customer[0] }}</div>
+                            <span class="td-name">{{ r.customer }}</span>
+                        </div>
+                    </td>
+                    <td class="font-bold text-red">₱{{ '{:,}'.format(r.amount) }}</td>
+                    <td style="font-size:.8rem;max-width:160px;">{{ r.reason }}</td>
+                    <td class="text-muted text-sm">{{ r.date }}</td>
+                    <td>
+                        <span class="badge {% if r.status == 'Approved' %}badge-green{% elif r.status == 'Pending' %}badge-yellow{% elif r.status == 'Processing' %}badge-blue{% else %}badge-red{% endif %}">
+                            {{ r.status }}
+                        </span>
+                    </td>
+                    <td style="font-size:.8rem;color:var(--ad-muted);max-width:160px;">{{ r.resolution if r.resolution else '—' }}</td>
+                    <td>
+                        {% if r.status == 'Pending' %}
+                        <div class="flex gap-1">
+                            <button class="btn btn-xs btn-success approve-btn">Approve</button>
+                            <button class="btn btn-xs btn-danger reject-btn">Reject</button>
+                        </div>
+                        {% else %}
+                        <button class="btn btn-xs btn-outline view-ref-btn">View</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.approve-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const td = this.closest('td');
+        td.innerHTML = '<span class="badge badge-green">Approved</span>';
+        const row = this.closest('tr');
+        row.querySelector('td:nth-child(7) .badge').className = 'badge badge-green';
+        row.querySelector('td:nth-child(7) .badge').textContent = 'Approved';
+        AdminUI.toast('Refund approved successfully.', 'success');
+    });
+});
+document.querySelectorAll('.reject-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const td = this.closest('td');
+        td.innerHTML = '<span class="badge badge-red">Rejected</span>';
+        AdminUI.toast('Refund rejected.', 'warning');
+    });
+});
+const rs = document.getElementById('refSearch');
+const rsf = document.getElementById('refStatusFilter');
+function filterRef() {
+    const q = rs.value.toLowerCase();
+    const sf = rsf.value;
+    document.querySelectorAll('#refBody tr').forEach(row => {
+        let show = row.dataset.customer.includes(q) || row.dataset.order.includes(q);
+        if (sf && row.dataset.status !== sf) show = false;
+        row.style.display = show ? '' : 'none';
+    });
+}
+rs.addEventListener('input', filterRef);
+rsf.addEventListener('change', filterRef);
+</script>
+{% endblock %}
