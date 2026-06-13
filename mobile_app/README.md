@@ -295,3 +295,5 @@ flutter build ios --release               # iOS (requires macOS)
 **Last Updated:** June 2026  
 **Platform:** Android ✅ | iOS 📱 (Pending)  
 **Framework:** Flutter 3.35.5
+
+
