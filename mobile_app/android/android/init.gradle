@@ -1,0 +1,34 @@
+allprojects {
+    repositories {
+        all { ArtifactRepository repo ->
+            if (repo instanceof MavenArtifactRepository) {
+                def url = repo.url.toString()
+                if (url.startsWith('https')) {
+                    project.logger.lifecycle "Repository ${repo.url} changed to HTTP"
+                    remove repo
+                    maven {
+                        url url.replace('https', 'http')
+                        allowInsecureProtocol = true
+                    }
+                }
+            }
+        }
+    }
+    buildscript {
+        repositories {
+            all { ArtifactRepository repo ->
+                if (repo instanceof MavenArtifactRepository) {
+                    def url = repo.url.toString()
+                    if (url.startsWith('https')) {
+                        project.logger.lifecycle "Buildscript repository ${repo.url} changed to HTTP"
+                        remove repo
+                        maven {
+                            url url.replace('https', 'http')
+                            allowInsecureProtocol = true
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
