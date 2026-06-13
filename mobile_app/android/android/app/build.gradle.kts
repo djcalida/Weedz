@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.wedzz.wedzz_mobile"
+    namespace = "com.example.wedzz_mobile"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.wedzz.wedzz_mobile"
+        applicationId = "com.example.wedzz_mobile"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

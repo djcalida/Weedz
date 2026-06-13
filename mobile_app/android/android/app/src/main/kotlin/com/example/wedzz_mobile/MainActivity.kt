@@ -1,4 +1,4 @@
-package com.wedzz.wedzz_mobile
+package com.example.wedzz_mobile
 
 import io.flutter.embedding.android.FlutterActivity
 
