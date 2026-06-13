@@ -2,7 +2,7 @@ name: Build Flutter APK
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, mobile-app-flutter ]
     paths:
       - 'mobile_app/**'
   workflow_dispatch:
