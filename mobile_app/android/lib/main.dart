@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/cart_provider.dart';
 import 'screens/main_screen.dart';
+import 'screens/chat_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +34,9 @@ class WedzzApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         home: const MainScreen(),
+        routes: {
+          '/chat': (context) => const ChatScreen(),
+        },
       ),
     );
   }

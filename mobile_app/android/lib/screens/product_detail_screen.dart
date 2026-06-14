@@ -179,7 +179,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           children: [
                             if (widget.product.hasDiscount) ...[
                               Text(
-                                '\$${widget.product.originalPrice!.toStringAsFixed(2)}',
+                                '₱${widget.product.originalPrice!.toStringAsFixed(2)}',
                                 style: const TextStyle(
                                   fontSize: 18,
                                   color: AppColors.textMuted,
@@ -209,7 +209,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           ],
                         ),
                         Text(
-                          '\$${widget.product.price.toStringAsFixed(2)}',
+                          '₱${widget.product.price.toStringAsFixed(2)}',
                           style: const TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
@@ -255,19 +255,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             bottom: 0,
             left: 0,
             right: 0,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.dark.withOpacity(0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, -4),
-                  ),
-                ],
-              ),
-              child: Row(
+            child: SafeArea(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.dark.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
+                ),
+                child: Row(
                 children: [
                   // Quantity Selector
                   Container(
@@ -349,6 +350,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ),
                 ],
               ),
+            ),
             ),
           ),
         ],

@@ -102,7 +102,7 @@ class ProfileScreen extends StatelessWidget {
                 Expanded(
                   child: _buildStatCard(
                     context,
-                    '\$2.4k',
+                    '₱120k',
                     'Spent',
                     Icons.account_balance_wallet_outlined,
                     AppColors.success,
@@ -205,6 +205,14 @@ class ProfileScreen extends StatelessWidget {
               context,
               'Support',
               [
+                _buildMenuItem(
+                  Icons.chat_bubble_outline,
+                  'Customer Chat',
+                  'Chat with our support team',
+                  () {
+                    Navigator.pushNamed(context, '/chat');
+                  },
+                ),
                 _buildMenuItem(
                   Icons.help_outline,
                   'Help Center',

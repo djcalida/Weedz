@@ -105,7 +105,7 @@ class HomeScreen extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            'On orders over \$99',
+                            'On orders over ₱5,000',
                             style: TextStyle(
                               color: Colors.white70,
                               fontSize: 11,
@@ -416,7 +416,7 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '\$${product.price.toStringAsFixed(2)}',
+                  '₱${product.price.toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,

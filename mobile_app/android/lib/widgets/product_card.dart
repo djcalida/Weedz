@@ -185,7 +185,7 @@ class ProductCard extends StatelessWidget {
                           children: [
                             if (product.hasDiscount)
                               Text(
-                                '\$${product.originalPrice!.toStringAsFixed(2)}',
+                                '₱${product.originalPrice!.toStringAsFixed(2)}',
                                 style: const TextStyle(
                                   fontSize: 10,
                                   color: AppColors.textMuted,
@@ -193,7 +193,7 @@ class ProductCard extends StatelessWidget {
                                 ),
                               ),
                             Text(
-                              '\$${product.price.toStringAsFixed(2)}',
+                              '₱${product.price.toStringAsFixed(2)}',
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,

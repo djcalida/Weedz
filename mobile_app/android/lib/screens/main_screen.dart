@@ -118,6 +118,13 @@ class _MainScreenState extends State<MainScreen> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.pushNamed(context, '/chat');
+        },
+        backgroundColor: AppColors.accent,
+        child: const Icon(Icons.chat_bubble, color: Colors.white),
+      ),
     );
   }
 }
