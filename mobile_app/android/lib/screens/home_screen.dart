@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:badges/badges.dart' as badges;
 import '../core/constants/app_colors.dart';
 import '../core/theme/app_theme.dart';
 import '../data/mock_products.dart';
 import '../widgets/product_card.dart';
 import '../widgets/category_chip.dart';
+import '../providers/cart_provider.dart';
 import 'product_detail_screen.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  final VoidCallback? onNavigateToCart;
+  
+  const HomeScreen({super.key, this.onNavigateToCart});
 
   @override
   Widget build(BuildContext context) {
@@ -64,6 +69,39 @@ class HomeScreen extends StatelessWidget {
                       color: AppColors.textPrimary),
                   onPressed: () {},
                 ),
+                Consumer<CartProvider>(
+                  builder: (context, cart, child) {
+                    return IconButton(
+                      icon: cart.itemCount > 0
+                          ? badges.Badge(
+                              badgeContent: Text(
+                                '${cart.itemCount}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              badgeStyle: const badges.BadgeStyle(
+                                badgeColor: AppColors.accent,
+                                padding: EdgeInsets.all(6),
+                              ),
+                              child: const Icon(
+                                Icons.shopping_cart_outlined,
+                                color: AppColors.textPrimary,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.shopping_cart_outlined,
+                              color: AppColors.textPrimary,
+                            ),
+                      onPressed: () {
+                        onNavigateToCart?.call();
+                      },
+                    );
+                  },
+                ),
+                const SizedBox(width: 8),
               ],
             ),
 

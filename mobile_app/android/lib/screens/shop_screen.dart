@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:badges/badges.dart' as badges;
 import '../core/constants/app_colors.dart';
 import '../data/mock_products.dart';
 import '../models/product.dart';
 import '../widgets/product_card.dart';
 import '../widgets/category_chip.dart';
+import '../providers/cart_provider.dart';
 import 'product_detail_screen.dart';
 
 class ShopScreen extends StatefulWidget {
-  const ShopScreen({super.key});
+  final VoidCallback? onNavigateToCart;
+  
+  const ShopScreen({super.key, this.onNavigateToCart});
 
   @override
   State<ShopScreen> createState() => _ShopScreenState();
@@ -73,6 +78,32 @@ class _ShopScreenState extends State<ShopScreen> {
                       IconButton(
                         icon: const Icon(Icons.tune),
                         onPressed: _showSortOptions,
+                      ),
+                      Consumer<CartProvider>(
+                        builder: (context, cart, child) {
+                          return IconButton(
+                            icon: cart.itemCount > 0
+                                ? badges.Badge(
+                                    badgeContent: Text(
+                                      '${cart.itemCount}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    badgeStyle: const badges.BadgeStyle(
+                                      badgeColor: AppColors.accent,
+                                      padding: EdgeInsets.all(6),
+                                    ),
+                                    child: const Icon(Icons.shopping_cart_outlined),
+                                  )
+                                : const Icon(Icons.shopping_cart_outlined),
+                            onPressed: () {
+                              widget.onNavigateToCart?.call();
+                            },
+                          );
+                        },
                       ),
                     ],
                   ),

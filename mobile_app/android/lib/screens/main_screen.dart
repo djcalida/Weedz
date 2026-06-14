@@ -18,11 +18,19 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    ShopScreen(),
-    CartScreen(),
-    ProfileScreen(),
+  void navigateToCart() {
+    setState(() => _currentIndex = 2);
+  }
+
+  void navigateToTab(int index) {
+    setState(() => _currentIndex = index);
+  }
+
+  List<Widget> get _screens => [
+    HomeScreen(onNavigateToCart: navigateToCart),
+    ShopScreen(onNavigateToCart: navigateToCart),
+    const CartScreen(),
+    const ProfileScreen(),
   ];
 
   @override
