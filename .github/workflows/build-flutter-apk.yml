@@ -5,11 +5,13 @@ on:
     branches: [ main, master, mobile-app-flutter ]
     paths:
       - 'mobile_app/**'
+      - '.github/workflows/**'
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       
@@ -23,22 +25,32 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          cache: true
       
       - name: Check Flutter
         run: |
           flutter --version
           flutter doctor -v
       
+      - name: Clean project
+        working-directory: ./mobile_app/android
+        run: flutter clean
+      
       - name: Get dependencies
         working-directory: ./mobile_app/android
-        run: flutter pub get
+        run: |
+          flutter pub get
+          flutter pub get --offline || flutter pub get
       
       - name: Build APK
         working-directory: ./mobile_app/android
-        run: flutter build apk --debug --verbose
+        run: |
+          flutter build apk --debug
       
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: wedzz-mobile-debug
           path: mobile_app/android/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
