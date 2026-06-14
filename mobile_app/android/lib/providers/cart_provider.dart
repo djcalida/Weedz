@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../models/product.dart';
 import '../models/cart_item.dart';
 
@@ -27,11 +29,13 @@ class CartProvider with ChangeNotifier {
     }
     
     notifyListeners();
+    _saveCart();
   }
 
   void removeItem(String productId) {
     _items.removeWhere((item) => item.product.id == productId);
     notifyListeners();
+    _saveCart();
   }
 
   void updateQuantity(String productId, int quantity) {
@@ -44,12 +48,14 @@ class CartProvider with ChangeNotifier {
     if (index != -1) {
       _items[index].quantity = quantity;
       notifyListeners();
+      _saveCart();
     }
   }
 
   void clear() {
     _items.clear();
     notifyListeners();
+    _saveCart();
   }
 
   bool isInCart(String productId) {
@@ -59,5 +65,39 @@ class CartProvider with ChangeNotifier {
   int getQuantity(String productId) {
     final index = _items.indexWhere((item) => item.product.id == productId);
     return index != -1 ? _items[index].quantity : 0;
+  }
+
+  Future<void> _saveCart() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cartJson = _items.map((item) => {
+        'product': item.product.toJson(),
+        'quantity': item.quantity,
+      }).toList();
+      await prefs.setString('cart', json.encode(cartJson));
+    } catch (e) {
+      debugPrint('Error saving cart: $e');
+    }
+  }
+
+  Future<void> loadCart() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cartString = prefs.getString('cart');
+      
+      if (cartString != null) {
+        final List<dynamic> cartJson = json.decode(cartString);
+        _items.clear();
+        for (var item in cartJson) {
+          _items.add(CartItem(
+            product: Product.fromJson(item['product']),
+            quantity: item['quantity'],
+          ));
+        }
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error loading cart: $e');
+    }
   }
 }
