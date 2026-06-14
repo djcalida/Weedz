@@ -32,16 +32,43 @@ class ProductCard extends StatelessWidget {
             // Product Image
             Stack(
               children: [
-                Container(
-                  height: 140,
-                  decoration: BoxDecoration(
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
+                  ),
+                  child: Container(
+                    height: 140,
+                    width: double.infinity,
                     color: AppColors.background,
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(12),
-                    ),
-                    image: DecorationImage(
-                      image: NetworkImage(product.image),
+                    child: Image.network(
+                      product.image,
                       fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: AppColors.background,
+                          child: const Icon(
+                            Icons.image_not_supported,
+                            size: 40,
+                            color: AppColors.textMuted,
+                          ),
+                        );
+                      },
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          color: AppColors.background,
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                  : null,
+                              strokeWidth: 2,
+                              color: AppColors.accent,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),

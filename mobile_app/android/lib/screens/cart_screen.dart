@@ -114,15 +114,41 @@ class CartScreen extends StatelessWidget {
                       child: Row(
                         children: [
                           // Product Image
-                          Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              width: 80,
+                              height: 80,
                               color: AppColors.background,
-                              borderRadius: BorderRadius.circular(8),
-                              image: DecorationImage(
-                                image: NetworkImage(item.product.image),
+                              child: Image.network(
+                                item.product.image,
                                 fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: AppColors.background,
+                                    child: const Icon(
+                                      Icons.image_not_supported,
+                                      size: 30,
+                                      color: AppColors.textMuted,
+                                    ),
+                                  );
+                                },
+                                loadingBuilder: (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Container(
+                                    color: AppColors.background,
+                                    child: Center(
+                                      child: CircularProgressIndicator(
+                                        value: loadingProgress.expectedTotalBytes != null
+                                            ? loadingProgress.cumulativeBytesLoaded /
+                                                loadingProgress.expectedTotalBytes!
+                                            : null,
+                                        strokeWidth: 2,
+                                        color: AppColors.accent,
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                           ),

@@ -130,6 +130,33 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     child: Image.network(
                       widget.product.image,
                       fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: AppColors.background,
+                          child: const Center(
+                            child: Icon(
+                              Icons.image_not_supported,
+                              size: 80,
+                              color: AppColors.textMuted,
+                            ),
+                          ),
+                        );
+                      },
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          color: AppColors.background,
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                  : null,
+                              color: AppColors.accent,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),

@@ -7,7 +7,7 @@ import 'providers/favorites_provider.dart';
 import 'screens/main_screen.dart';
 import 'screens/chat_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // Set system UI overlay style
@@ -21,15 +21,34 @@ void main() {
   runApp(const WedzzApp());
 }
 
-class WedzzApp extends StatelessWidget {
+class WedzzApp extends StatefulWidget {
   const WedzzApp({super.key});
+
+  @override
+  State<WedzzApp> createState() => _WedzzAppState();
+}
+
+class _WedzzAppState extends State<WedzzApp> {
+  late CartProvider cartProvider;
+  late FavoritesProvider favoritesProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    cartProvider = CartProvider();
+    favoritesProvider = FavoritesProvider();
+    
+    // Load saved data
+    cartProvider.loadCart();
+    favoritesProvider.loadFavorites();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => CartProvider()),
-        ChangeNotifierProvider(create: (_) => FavoritesProvider()),
+        ChangeNotifierProvider.value(value: cartProvider),
+        ChangeNotifierProvider.value(value: favoritesProvider),
       ],
       child: MaterialApp(
         title: 'Wedzz Motorparts',
