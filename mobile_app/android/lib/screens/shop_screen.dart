@@ -85,7 +85,7 @@ class _ShopScreenState extends State<ShopScreen> {
                             icon: cart.itemCount > 0
                                 ? badges.Badge(
                                     badgeContent: Text(
-                                      '${cart.itemCount}',
+                                      cart.itemCount > 99 ? '99+' : '${cart.itemCount}',
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 10,
