@@ -103,6 +103,9 @@ class ProfileScreen extends StatelessWidget {
                         'Wishlist',
                         Icons.favorite_border,
                         AppColors.danger,
+                        onTap: () {
+                          Navigator.pushNamed(context, '/wishlist');
+                        },
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -164,7 +167,9 @@ class ProfileScreen extends StatelessWidget {
                   Icons.favorite_border,
                   'Wishlist',
                   'View saved items',
-                  () => _showWishlistDialog(context),
+                  () {
+                    Navigator.pushNamed(context, '/wishlist');
+                  },
                 ),
                 _buildMenuItem(
                   Icons.star_border,
@@ -278,9 +283,10 @@ class ProfileScreen extends StatelessWidget {
     String value,
     String label,
     IconData icon,
-    Color color,
-  ) {
-    return Container(
+    Color color, {
+    VoidCallback? onTap,
+  }) {
+    final card = Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -308,6 +314,15 @@ class ProfileScreen extends StatelessWidget {
         ],
       ),
     );
+
+    if (onTap != null) {
+      return GestureDetector(
+        onTap: onTap,
+        child: card,
+      );
+    }
+
+    return card;
   }
 
   Widget _buildSection(

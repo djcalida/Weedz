@@ -6,6 +6,7 @@ import 'providers/cart_provider.dart';
 import 'providers/favorites_provider.dart';
 import 'screens/main_screen.dart';
 import 'screens/chat_screen.dart';
+import 'screens/wishlist_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,6 +58,7 @@ class _WedzzAppState extends State<WedzzApp> {
         home: const MainScreen(),
         routes: {
           '/chat': (context) => const ChatScreen(),
+          '/wishlist': (context) => const WishlistScreen(),
         },
       ),
     );
