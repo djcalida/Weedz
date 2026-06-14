@@ -6,6 +6,7 @@ import '../data/mock_products.dart';
 import '../models/product.dart';
 import '../widgets/product_card.dart';
 import '../widgets/category_chip.dart';
+import '../widgets/page_loader.dart';
 import '../providers/cart_provider.dart';
 import 'product_detail_screen.dart';
 
@@ -21,38 +22,62 @@ class ShopScreen extends StatefulWidget {
 class _ShopScreenState extends State<ShopScreen> {
   String _selectedCategory = 'All';
   String _sortBy = 'featured';
-  List<Product> _filteredProducts = MockProducts.all;
+  List<Product> _filteredProducts = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _applyFilters();
+    _loadPage();
+  }
+
+  Future<void> _loadPage() async {
+    await simulatePageFetch();
+    if (!mounted) return;
+    setState(() {
+      _updateFilteredProducts();
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _refreshPage() async {
+    await simulatePageFetch(const Duration(milliseconds: 600));
+    if (!mounted) return;
+    setState(_updateFilteredProducts);
+  }
+
+  void _updateFilteredProducts() {
+    _filteredProducts = MockProducts.getByCategory(_selectedCategory);
+
+    switch (_sortBy) {
+      case 'price_low':
+        _filteredProducts.sort((a, b) => a.price.compareTo(b.price));
+        break;
+      case 'price_high':
+        _filteredProducts.sort((a, b) => b.price.compareTo(a.price));
+        break;
+      case 'rating':
+        _filteredProducts.sort((a, b) => b.rating.compareTo(a.rating));
+        break;
+      case 'newest':
+        break;
+      default:
+        break;
+    }
   }
 
   void _applyFilters() {
-    setState(() {
-      _filteredProducts = MockProducts.getByCategory(_selectedCategory);
-
-      switch (_sortBy) {
-        case 'price_low':
-          _filteredProducts.sort((a, b) => a.price.compareTo(b.price));
-          break;
-        case 'price_high':
-          _filteredProducts.sort((a, b) => b.price.compareTo(a.price));
-          break;
-        case 'rating':
-          _filteredProducts.sort((a, b) => b.rating.compareTo(a.rating));
-          break;
-        case 'newest':
-          break;
-        default:
-          break;
-      }
-    });
+    setState(_updateFilteredProducts);
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: PageLoader(message: 'Loading shop...'),
+      );
+    }
+
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -163,51 +188,64 @@ class _ShopScreenState extends State<ShopScreen> {
 
             // Products Grid
             Expanded(
-              child: _filteredProducts.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+              child: RefreshIndicator(
+                color: AppColors.accent,
+                onRefresh: _refreshPage,
+                child: _filteredProducts.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
                         children: [
-                          Icon(
-                            Icons.inventory_2_outlined,
-                            size: 64,
-                            color: AppColors.textMuted.withOpacity(0.5),
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'No products found',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: AppColors.textMuted,
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.4,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.inventory_2_outlined,
+                                  size: 64,
+                                  color: AppColors.textMuted.withOpacity(0.5),
+                                ),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  'No products found',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: AppColors.textMuted,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
+                      )
+                    : GridView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.all(16),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.7,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
+                        itemCount: _filteredProducts.length,
+                        itemBuilder: (context, index) {
+                          final product = _filteredProducts[index];
+                          return ProductCard(
+                            product: product,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      ProductDetailScreen(product: product),
+                                ),
+                              );
+                            },
+                          );
+                        },
                       ),
-                    )
-                  : GridView.builder(
-                      padding: const EdgeInsets.all(16),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.7,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                      ),
-                      itemCount: _filteredProducts.length,
-                      itemBuilder: (context, index) {
-                        final product = _filteredProducts[index];
-                        return ProductCard(
-                          product: product,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ProductDetailScreen(product: product),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
+              ),
             ),
           ],
         ),

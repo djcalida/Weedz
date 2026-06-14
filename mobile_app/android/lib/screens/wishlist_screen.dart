@@ -4,10 +4,35 @@ import '../core/constants/app_colors.dart';
 import '../core/theme/app_theme.dart';
 import '../providers/favorites_provider.dart';
 import '../widgets/product_card.dart';
+import '../widgets/page_loader.dart';
 import 'product_detail_screen.dart';
 
-class WishlistScreen extends StatelessWidget {
+class WishlistScreen extends StatefulWidget {
   const WishlistScreen({super.key});
+
+  @override
+  State<WishlistScreen> createState() => _WishlistScreenState();
+}
+
+class _WishlistScreenState extends State<WishlistScreen> {
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadPage());
+  }
+
+  Future<void> _loadPage() async {
+    await Provider.of<FavoritesProvider>(context, listen: false).loadFavorites();
+    await simulatePageFetch();
+    if (mounted) setState(() => _isLoading = false);
+  }
+
+  Future<void> _refreshPage() async {
+    await Provider.of<FavoritesProvider>(context, listen: false).loadFavorites();
+    await simulatePageFetch(const Duration(milliseconds: 600));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +43,7 @@ class WishlistScreen extends StatelessWidget {
           Consumer<FavoritesProvider>(
             builder: (context, favorites, child) {
               if (favorites.favoriteCount == 0) return const SizedBox();
-              
+
               return IconButton(
                 icon: const Icon(Icons.delete_outline),
                 tooltip: 'Clear all',
@@ -30,93 +55,110 @@ class WishlistScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Consumer<FavoritesProvider>(
-        builder: (context, favorites, child) {
-          if (favorites.favoriteCount == 0) {
-            return _buildEmptyState(context);
-          }
+      body: _isLoading
+          ? const PageLoader(message: 'Loading wishlist...')
+          : Consumer<FavoritesProvider>(
+              builder: (context, favorites, child) {
+                if (favorites.favoriteCount == 0) {
+                  return RefreshIndicator(
+                    color: AppColors.accent,
+                    onRefresh: _refreshPage,
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.7,
+                          child: _buildEmptyState(context),
+                        ),
+                      ],
+                    ),
+                  );
+                }
 
-          return Column(
-            children: [
-              // Header with count
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  boxShadow: AppTheme.shadowSm,
-                ),
-                child: Row(
+                return Column(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.accentLight,
-                        borderRadius: BorderRadius.circular(12),
+                        color: AppColors.surface,
+                        boxShadow: AppTheme.shadowSm,
                       ),
-                      child: const Icon(
-                        Icons.favorite,
-                        color: AppColors.danger,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Row(
                         children: [
-                          Text(
-                            '${favorites.favoriteCount} ${favorites.favoriteCount == 1 ? 'Item' : 'Items'}',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.accentLight,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.favorite,
+                              color: AppColors.danger,
+                              size: 24,
                             ),
                           ),
-                          const Text(
-                            'Your saved products',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textMuted,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${favorites.favoriteCount} ${favorites.favoriteCount == 1 ? 'Item' : 'Items'}',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const Text(
+                                  'Your saved products',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: AppColors.textMuted,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-
-              // Products Grid
-              Expanded(
-                child: GridView.builder(
-                  padding: const EdgeInsets.all(16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.68,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                  ),
-                  itemCount: favorites.favoriteCount,
-                  itemBuilder: (context, index) {
-                    final product = favorites.favorites[index];
-                    return ProductCard(
-                      product: product,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                ProductDetailScreen(product: product),
+                    Expanded(
+                      child: RefreshIndicator(
+                        color: AppColors.accent,
+                        onRefresh: _refreshPage,
+                        child: GridView.builder(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.all(16),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.68,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
                           ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
-        },
-      ),
+                          itemCount: favorites.favoriteCount,
+                          itemBuilder: (context, index) {
+                            final product = favorites.favorites[index];
+                            return ProductCard(
+                              product: product,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        ProductDetailScreen(product: product),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
     );
   }
 
@@ -179,7 +221,7 @@ class WishlistScreen extends StatelessWidget {
 
   static void _showClearConfirmation(BuildContext context) {
     final favorites = Provider.of<FavoritesProvider>(context, listen: false);
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

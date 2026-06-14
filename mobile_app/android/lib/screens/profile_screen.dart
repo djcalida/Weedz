@@ -5,231 +5,278 @@ import '../core/theme/app_theme.dart';
 import '../providers/favorites_provider.dart';
 import '../providers/cart_provider.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/page_loader.dart';
 
 void _goToLoginPage(BuildContext context) {
   Navigator.pushNamed(context, '/login');
 }
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadPage());
+  }
+
+  Future<void> _loadPage() async {
+    await Future.wait([
+      Provider.of<AuthProvider>(context, listen: false).loadSession(),
+      Provider.of<FavoritesProvider>(context, listen: false).loadFavorites(),
+      Provider.of<CartProvider>(context, listen: false).loadCart(),
+    ]);
+    await simulatePageFetch();
+    if (mounted) setState(() => _isLoading = false);
+  }
+
+  Future<void> _refreshPage() async {
+    await Future.wait([
+      Provider.of<AuthProvider>(context, listen: false).loadSession(),
+      Provider.of<FavoritesProvider>(context, listen: false).loadFavorites(),
+      Provider.of<CartProvider>(context, listen: false).loadCart(),
+    ]);
+    await simulatePageFetch(const Duration(milliseconds: 600));
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Profile')),
+        body: const PageLoader(message: 'Loading profile...'),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Profile Header
-            Consumer<AuthProvider>(
-              builder: (context, auth, child) {
-                return _buildProfileCard(context, auth);
-              },
-            ),
+      body: RefreshIndicator(
+        color: AppColors.accent,
+        onRefresh: _refreshPage,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              // Profile Header
+              Consumer<AuthProvider>(
+                builder: (context, auth, child) {
+                  return _buildProfileCard(context, auth);
+                },
+              ),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // Stats Cards
-            Consumer2<CartProvider, FavoritesProvider>(
-              builder: (context, cart, favorites, child) {
-                return Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatCard(
-                        context,
-                        '0',
-                        'Orders',
-                        Icons.shopping_bag_outlined,
-                        AppColors.accent,
+              // Stats Cards
+              Consumer2<CartProvider, FavoritesProvider>(
+                builder: (context, cart, favorites, child) {
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatCard(
+                          context,
+                          '0',
+                          'Orders',
+                          Icons.shopping_bag_outlined,
+                          AppColors.accent,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildStatCard(
-                        context,
-                        '${favorites.favoriteCount}',
-                        'Wishlist',
-                        Icons.favorite_border,
-                        AppColors.danger,
-                        onTap: () {
-                          Navigator.pushNamed(context, '/wishlist');
-                        },
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildStatCard(
+                          context,
+                          '${favorites.favoriteCount}',
+                          'Wishlist',
+                          Icons.favorite_border,
+                          AppColors.danger,
+                          onTap: () {
+                            Navigator.pushNamed(context, '/wishlist');
+                          },
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildStatCard(
-                        context,
-                        '₱0',
-                        'Spent',
-                        Icons.account_balance_wallet_outlined,
-                        AppColors.success,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildStatCard(
+                          context,
+                          '₱0',
+                          'Spent',
+                          Icons.account_balance_wallet_outlined,
+                          AppColors.success,
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              },
-            ),
+                    ],
+                  );
+                },
+              ),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // Menu Items
-            _buildSection(
-              context,
-              'Account',
-              [
-                _buildMenuItem(
-                  Icons.person_outline,
-                  'Personal Information',
-                  'Update your details',
-                  () => _showComingSoonDialog(context, 'Personal Information'),
-                ),
-                _buildMenuItem(
-                  Icons.location_on_outlined,
-                  'Addresses',
-                  'Manage shipping addresses',
-                  () => _showComingSoonDialog(context, 'Addresses'),
-                ),
-                _buildMenuItem(
-                  Icons.credit_card_outlined,
-                  'Payment Methods',
-                  'Manage payment options',
-                  () => _showComingSoonDialog(context, 'Payment Methods'),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            _buildSection(
-              context,
-              'Orders & Activity',
-              [
-                _buildMenuItem(
-                  Icons.receipt_long_outlined,
-                  'Order History',
-                  'View all your orders',
-                  () => _showComingSoonDialog(context, 'Order History'),
-                ),
-                _buildMenuItem(
-                  Icons.favorite_border,
-                  'Wishlist',
-                  'View saved items',
-                  () {
-                    Navigator.pushNamed(context, '/wishlist');
-                  },
-                ),
-                _buildMenuItem(
-                  Icons.star_border,
-                  'Reviews',
-                  'Your product reviews',
-                  () => _showComingSoonDialog(context, 'Reviews'),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            _buildSection(
-              context,
-              'Settings',
-              [
-                _buildMenuItem(
-                  Icons.notifications_outlined,
-                  'Notifications',
-                  'Manage notifications',
-                  () => _showComingSoonDialog(context, 'Notifications'),
-                ),
-                _buildMenuItem(
-                  Icons.security_outlined,
-                  'Security',
-                  'Password & security',
-                  () => _showComingSoonDialog(context, 'Security'),
-                ),
-                _buildMenuItem(
-                  Icons.language_outlined,
-                  'Language',
-                  'English (US)',
-                  () => _showComingSoonDialog(context, 'Language Settings'),
-                ),
-                _buildMenuItem(
-                  Icons.dark_mode_outlined,
-                  'Theme',
-                  'Light mode',
-                  () => _showComingSoonDialog(context, 'Theme Settings'),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            _buildSection(
-              context,
-              'Support',
-              [
-                _buildMenuItem(
-                  Icons.chat_bubble_outline,
-                  'Customer Chat',
-                  'Chat with our support team',
-                  () {
-                    Navigator.pushNamed(context, '/chat');
-                  },
-                ),
-                _buildMenuItem(
-                  Icons.help_outline,
-                  'Help Center',
-                  'FAQs and support',
-                  () => _showComingSoonDialog(context, 'Help Center'),
-                ),
-                _buildMenuItem(
-                  Icons.feedback_outlined,
-                  'Feedback',
-                  'Send us your feedback',
-                  () => _showComingSoonDialog(context, 'Feedback'),
-                ),
-                _buildMenuItem(
-                  Icons.info_outline,
-                  'About',
-                  'Version 1.0.0+2',
-                  () => _showAboutDialog(context),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // Logout Button
-            Consumer<AuthProvider>(
-              builder: (context, auth, child) {
-                if (!auth.isLoggedIn) return const SizedBox.shrink();
-
-                return SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () => _showLogoutDialog(context),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: const BorderSide(color: AppColors.danger, width: 2),
-                      foregroundColor: AppColors.danger,
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.logout),
-                        SizedBox(width: 8),
-                        Text('Logout'),
-                      ],
-                    ),
+              // Menu Items
+              _buildSection(
+                context,
+                'Account',
+                [
+                  _buildMenuItem(
+                    Icons.person_outline,
+                    'Personal Information',
+                    'Update your details',
+                    () =>
+                        _showComingSoonDialog(context, 'Personal Information'),
                   ),
-                );
-              },
-            ),
+                  _buildMenuItem(
+                    Icons.location_on_outlined,
+                    'Addresses',
+                    'Manage shipping addresses',
+                    () => _showComingSoonDialog(context, 'Addresses'),
+                  ),
+                  _buildMenuItem(
+                    Icons.credit_card_outlined,
+                    'Payment Methods',
+                    'Manage payment options',
+                    () => _showComingSoonDialog(context, 'Payment Methods'),
+                  ),
+                ],
+              ),
 
-            const SizedBox(height: 16),
-          ],
+              const SizedBox(height: 16),
+
+              _buildSection(
+                context,
+                'Orders & Activity',
+                [
+                  _buildMenuItem(
+                    Icons.receipt_long_outlined,
+                    'Order History',
+                    'View all your orders',
+                    () => _showComingSoonDialog(context, 'Order History'),
+                  ),
+                  _buildMenuItem(
+                    Icons.favorite_border,
+                    'Wishlist',
+                    'View saved items',
+                    () {
+                      Navigator.pushNamed(context, '/wishlist');
+                    },
+                  ),
+                  _buildMenuItem(
+                    Icons.star_border,
+                    'Reviews',
+                    'Your product reviews',
+                    () => _showComingSoonDialog(context, 'Reviews'),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              _buildSection(
+                context,
+                'Settings',
+                [
+                  _buildMenuItem(
+                    Icons.notifications_outlined,
+                    'Notifications',
+                    'Manage notifications',
+                    () => _showComingSoonDialog(context, 'Notifications'),
+                  ),
+                  _buildMenuItem(
+                    Icons.security_outlined,
+                    'Security',
+                    'Password & security',
+                    () => _showComingSoonDialog(context, 'Security'),
+                  ),
+                  _buildMenuItem(
+                    Icons.language_outlined,
+                    'Language',
+                    'English (US)',
+                    () => _showComingSoonDialog(context, 'Language Settings'),
+                  ),
+                  _buildMenuItem(
+                    Icons.dark_mode_outlined,
+                    'Theme',
+                    'Light mode',
+                    () => _showComingSoonDialog(context, 'Theme Settings'),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              _buildSection(
+                context,
+                'Support',
+                [
+                  _buildMenuItem(
+                    Icons.chat_bubble_outline,
+                    'Customer Chat',
+                    'Chat with our support team',
+                    () {
+                      Navigator.pushNamed(context, '/chat');
+                    },
+                  ),
+                  _buildMenuItem(
+                    Icons.help_outline,
+                    'Help Center',
+                    'FAQs and support',
+                    () => _showComingSoonDialog(context, 'Help Center'),
+                  ),
+                  _buildMenuItem(
+                    Icons.feedback_outlined,
+                    'Feedback',
+                    'Send us your feedback',
+                    () => _showComingSoonDialog(context, 'Feedback'),
+                  ),
+                  _buildMenuItem(
+                    Icons.info_outline,
+                    'About',
+                    'Version 1.0.0+2',
+                    () => _showAboutDialog(context),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              // Logout Button
+              Consumer<AuthProvider>(
+                builder: (context, auth, child) {
+                  if (!auth.isLoggedIn) return const SizedBox.shrink();
+
+                  return SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () => _showLogoutDialog(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        side:
+                            const BorderSide(color: AppColors.danger, width: 2),
+                        foregroundColor: AppColors.danger,
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.logout),
+                          SizedBox(width: 8),
+                          Text('Logout'),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
@@ -278,48 +325,48 @@ class ProfileScreen extends StatelessWidget {
             child: GestureDetector(
               onTap: auth.isLoggedIn ? null : () => _goToLoginPage(context),
               child: auth.isLoggedIn
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        auth.fullName,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          auth.fullName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        auth.email,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 13,
+                        const SizedBox(height: 4),
+                        Text(
+                          auth.email,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                          ),
                         ),
-                      ),
-                    ],
-                  )
-                : const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Guest',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                      ],
+                    )
+                  : const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Guest',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Sign in to access your account',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 13,
+                        SizedBox(height: 4),
+                        Text(
+                          'Sign in to access your account',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
             ),
           ),
           if (auth.isLoggedIn)
@@ -334,7 +381,8 @@ class ProfileScreen extends StatelessWidget {
               style: TextButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: AppColors.dark,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),

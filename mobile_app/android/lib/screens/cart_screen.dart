@@ -4,14 +4,46 @@ import 'package:intl/intl.dart';
 import '../core/constants/app_colors.dart';
 import '../core/theme/app_theme.dart';
 import '../widgets/product_image.dart';
+import '../widgets/page_loader.dart';
 import '../providers/cart_provider.dart';
 
-class CartScreen extends StatelessWidget {
+class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
+
+  @override
+  State<CartScreen> createState() => _CartScreenState();
+}
+
+class _CartScreenState extends State<CartScreen> {
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadPage());
+  }
+
+  Future<void> _loadPage() async {
+    await Provider.of<CartProvider>(context, listen: false).loadCart();
+    await simulatePageFetch();
+    if (mounted) setState(() => _isLoading = false);
+  }
+
+  Future<void> _refreshPage() async {
+    await Provider.of<CartProvider>(context, listen: false).loadCart();
+    await simulatePageFetch(const Duration(milliseconds: 600));
+  }
 
   @override
   Widget build(BuildContext context) {
     final currency = NumberFormat.currency(symbol: '₱', decimalDigits: 2);
+
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Shopping Cart')),
+        body: const PageLoader(message: 'Loading cart...'),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -57,37 +89,47 @@ class CartScreen extends StatelessWidget {
       body: Consumer<CartProvider>(
         builder: (context, cart, child) {
           if (cart.items.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+            return RefreshIndicator(
+              color: AppColors.accent,
+              onRefresh: _refreshPage,
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: AppColors.background,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.shopping_cart_outlined,
-                      size: 64,
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Your cart is empty',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Start shopping to add items',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textMuted,
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.6,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.shopping_cart_outlined,
+                            size: 64,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Your cart is empty',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Start shopping to add items',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -99,10 +141,14 @@ class CartScreen extends StatelessWidget {
             children: [
               // Cart Items
               Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: cart.items.length,
-                  itemBuilder: (context, index) {
+                child: RefreshIndicator(
+                  color: AppColors.accent,
+                  onRefresh: _refreshPage,
+                  child: ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    itemCount: cart.items.length,
+                    itemBuilder: (context, index) {
                     final item = cart.items[index];
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -227,6 +273,7 @@ class CartScreen extends StatelessWidget {
                       ),
                     );
                   },
+                ),
                 ),
               ),
 

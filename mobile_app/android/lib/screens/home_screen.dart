@@ -4,26 +4,69 @@ import 'package:badges/badges.dart' as badges;
 import '../core/constants/app_colors.dart';
 import '../core/theme/app_theme.dart';
 import '../data/mock_products.dart';
+import '../models/product.dart';
 import '../widgets/product_card.dart';
 import '../widgets/category_chip.dart';
 import '../widgets/product_image.dart';
+import '../widgets/page_loader.dart';
 import '../providers/cart_provider.dart';
 import 'product_detail_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   final VoidCallback? onNavigateToCart;
-  
+
   const HomeScreen({super.key, this.onNavigateToCart});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  bool _isLoading = true;
+  List<Product> _featuredProducts = [];
+  List<Product> _bestsellers = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPage();
+  }
+
+  Future<void> _loadPage() async {
+    await simulatePageFetch();
+    if (!mounted) return;
+    setState(() {
+      _featuredProducts = MockProducts.getFeatured();
+      _bestsellers = MockProducts.getBestsellers();
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _refreshPage() async {
+    await simulatePageFetch(const Duration(milliseconds: 600));
+    if (!mounted) return;
+    setState(() {
+      _featuredProducts = MockProducts.getFeatured();
+      _bestsellers = MockProducts.getBestsellers();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final featuredProducts = MockProducts.getFeatured();
-    final bestsellers = MockProducts.getBestsellers();
+    if (_isLoading) {
+      return const Scaffold(
+        body: PageLoader(message: 'Loading home...'),
+      );
+    }
 
     return Scaffold(
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
+        child: RefreshIndicator(
+          color: AppColors.accent,
+          onRefresh: _refreshPage,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
             // App Bar
             SliverAppBar(
               floating: true,
@@ -97,7 +140,7 @@ class HomeScreen extends StatelessWidget {
                               color: AppColors.textPrimary,
                             ),
                       onPressed: () {
-                        onNavigateToCart?.call();
+                        widget.onNavigateToCart?.call();
                       },
                     );
                   },
@@ -272,7 +315,7 @@ class HomeScreen extends StatelessWidget {
                 ),
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
-                    final product = featuredProducts[index];
+                    final product = _featuredProducts[index];
                     return ProductCard(
                       product: product,
                       onTap: () {
@@ -285,7 +328,7 @@ class HomeScreen extends StatelessWidget {
                       },
                     );
                   },
-                  childCount: featuredProducts.length,
+                  childCount: _featuredProducts.length,
                 ),
               ),
             ),
@@ -306,16 +349,17 @@ class HomeScreen extends StatelessWidget {
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
-                    final product = bestsellers[index];
+                    final product = _bestsellers[index];
                     return _buildBestsellerCard(context, product);
                   },
-                  childCount: bestsellers.length,
+                  childCount: _bestsellers.length,
                 ),
               ),
             ),
 
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
           ],
+        ),
         ),
       ),
     );
