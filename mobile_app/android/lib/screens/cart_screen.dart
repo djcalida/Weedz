@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../core/constants/app_colors.dart';
 import '../core/theme/app_theme.dart';
+import '../widgets/product_image.dart';
 import '../providers/cart_provider.dart';
 
 class CartScreen extends StatelessWidget {
@@ -116,40 +117,10 @@ class CartScreen extends StatelessWidget {
                           // Product Image
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: Container(
+                            child: ProductImage(
+                              imageUrl: item.product.image,
                               width: 80,
                               height: 80,
-                              color: AppColors.background,
-                              child: Image.network(
-                                item.product.image,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                    color: AppColors.background,
-                                    child: const Icon(
-                                      Icons.image_not_supported,
-                                      size: 30,
-                                      color: AppColors.textMuted,
-                                    ),
-                                  );
-                                },
-                                loadingBuilder: (context, child, loadingProgress) {
-                                  if (loadingProgress == null) return child;
-                                  return Container(
-                                    color: AppColors.background,
-                                    child: Center(
-                                      child: CircularProgressIndicator(
-                                        value: loadingProgress.expectedTotalBytes != null
-                                            ? loadingProgress.cumulativeBytesLoaded /
-                                                loadingProgress.expectedTotalBytes!
-                                            : null,
-                                        strokeWidth: 2,
-                                        color: AppColors.accent,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
                             ),
                           ),
                           

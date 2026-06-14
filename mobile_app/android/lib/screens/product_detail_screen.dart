@@ -7,6 +7,7 @@ import '../core/theme/app_theme.dart';
 import '../models/product.dart';
 import '../providers/cart_provider.dart';
 import '../providers/favorites_provider.dart';
+import '../widgets/product_image.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -125,39 +126,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ),
                 ],
                 flexibleSpace: FlexibleSpaceBar(
-                  background: Container(
-                    color: AppColors.background,
-                    child: Image.network(
-                      widget.product.image,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: AppColors.background,
-                          child: const Center(
-                            child: Icon(
-                              Icons.image_not_supported,
-                              size: 80,
-                              color: AppColors.textMuted,
-                            ),
-                          ),
-                        );
-                      },
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Container(
-                          color: AppColors.background,
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
-                                  : null,
-                              color: AppColors.accent,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                  background: ProductImage(
+                    imageUrl: widget.product.image,
+                    width: double.infinity,
+                    height: double.infinity,
                   ),
                 ),
               ),

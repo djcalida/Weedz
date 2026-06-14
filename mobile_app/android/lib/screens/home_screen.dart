@@ -6,6 +6,7 @@ import '../core/theme/app_theme.dart';
 import '../data/mock_products.dart';
 import '../widgets/product_card.dart';
 import '../widgets/category_chip.dart';
+import '../widgets/product_image.dart';
 import '../providers/cart_provider.dart';
 import 'product_detail_screen.dart';
 
@@ -407,16 +408,12 @@ class HomeScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(8),
-              image: DecorationImage(
-                image: NetworkImage(product.image),
-                fit: BoxFit.cover,
-              ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: ProductImage(
+              imageUrl: product.image,
+              width: 80,
+              height: 80,
             ),
           ),
           const SizedBox(width: 12),

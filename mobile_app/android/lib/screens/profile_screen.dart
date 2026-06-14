@@ -4,6 +4,11 @@ import '../core/constants/app_colors.dart';
 import '../core/theme/app_theme.dart';
 import '../providers/favorites_provider.dart';
 import '../providers/cart_provider.dart';
+import '../providers/auth_provider.dart';
+
+void _goToLoginPage(BuildContext context) {
+  Navigator.pushNamed(context, '/login');
+}
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -19,64 +24,10 @@ class ProfileScreen extends StatelessWidget {
         child: Column(
           children: [
             // Profile Header
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: AppColors.darkGradient,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: AppTheme.shadowMd,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 70,
-                    height: 70,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 3),
-                    ),
-                    child: const Icon(
-                      Icons.person,
-                      size: 40,
-                      color: AppColors.dark,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Guest User',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'guest@wedzz.com',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.edit,
-                      color: Colors.white,
-                    ),
-                    onPressed: () {
-                      _showComingSoonDialog(context, 'Edit Profile');
-                    },
-                  ),
-                ],
-              ),
+            Consumer<AuthProvider>(
+              builder: (context, auth, child) {
+                return _buildProfileCard(context, auth);
+              },
             ),
 
             const SizedBox(height: 24),
@@ -251,29 +202,149 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Logout Button
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () => _showLogoutDialog(context),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: const BorderSide(color: AppColors.danger, width: 2),
-                  foregroundColor: AppColors.danger,
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.logout),
-                    SizedBox(width: 8),
-                    Text('Logout'),
-                  ],
-                ),
-              ),
+            Consumer<AuthProvider>(
+              builder: (context, auth, child) {
+                if (!auth.isLoggedIn) return const SizedBox.shrink();
+
+                return SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => _showLogoutDialog(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: const BorderSide(color: AppColors.danger, width: 2),
+                      foregroundColor: AppColors.danger,
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.logout),
+                        SizedBox(width: 8),
+                        Text('Logout'),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
 
             const SizedBox(height: 16),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildProfileCard(BuildContext context, AuthProvider auth) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: AppColors.darkGradient,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppTheme.shadowMd,
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: auth.isLoggedIn ? null : () => _goToLoginPage(context),
+            child: Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 3),
+              ),
+              child: auth.isLoggedIn
+                  ? Center(
+                      child: Text(
+                        auth.initials,
+                        style: const TextStyle(
+                          color: AppColors.dark,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    )
+                  : const Icon(
+                      Icons.person,
+                      size: 40,
+                      color: AppColors.dark,
+                    ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: GestureDetector(
+              onTap: auth.isLoggedIn ? null : () => _goToLoginPage(context),
+              child: auth.isLoggedIn
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        auth.fullName,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        auth.email,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  )
+                : const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Guest',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Sign in to access your account',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+            ),
+          ),
+          if (auth.isLoggedIn)
+            IconButton(
+              icon: const Icon(Icons.edit, color: Colors.white),
+              tooltip: 'Edit profile',
+              onPressed: () => _showEditProfileDialog(context),
+            )
+          else
+            TextButton(
+              onPressed: () => _goToLoginPage(context),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: AppColors.dark,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: const Text(
+                'Sign In',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -417,43 +488,6 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  static void _showWishlistDialog(BuildContext context) {
-    final favorites = Provider.of<FavoritesProvider>(context, listen: false);
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.favorite, color: AppColors.danger),
-            SizedBox(width: 12),
-            Text('Your Wishlist'),
-          ],
-        ),
-        content: Text(
-          favorites.favoriteCount > 0
-              ? 'You have ${favorites.favoriteCount} item${favorites.favoriteCount == 1 ? '' : 's'} in your wishlist.\n\nBrowse the shop to see your saved items!'
-              : 'Your wishlist is empty.\n\nTap the heart icon on products to save them here!',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-          if (favorites.favoriteCount > 0)
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                // Navigate to shop tab
-              },
-              child: const Text('Browse Shop'),
-            ),
-        ],
-      ),
-    );
-  }
-
   static void _showAboutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -501,6 +535,73 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  static void _showEditProfileDialog(BuildContext context) {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final nameController = TextEditingController(text: auth.fullName);
+    final emailController = TextEditingController(text: auth.email);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Edit Profile'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(
+                labelText: 'Full Name',
+                prefixIcon: Icon(Icons.badge_outlined),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: emailController,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(
+                labelText: 'Email',
+                prefixIcon: Icon(Icons.email_outlined),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (nameController.text.trim().isEmpty ||
+                  emailController.text.trim().isEmpty) {
+                return;
+              }
+
+              await auth.updateProfile(
+                fullName: nameController.text,
+                email: emailController.text,
+              );
+
+              if (context.mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Profile updated'),
+                    backgroundColor: AppColors.success,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
   static void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -520,15 +621,18 @@ class ProfileScreen extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Logged out successfully'),
-                  backgroundColor: AppColors.success,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+              await Provider.of<AuthProvider>(context, listen: false).signOut();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Logged out successfully'),
+                    backgroundColor: AppColors.success,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.danger),
             child: const Text('Logout'),
