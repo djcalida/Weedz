@@ -4,6 +4,7 @@ import '../core/constants/app_colors.dart';
 import '../core/theme/app_theme.dart';
 import '../models/product.dart';
 import '../providers/cart_provider.dart';
+import '../providers/favorites_provider.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -99,18 +100,42 @@ class ProductCard extends StatelessWidget {
                 Positioned(
                   bottom: 8,
                   right: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: AppTheme.shadowSm,
-                    ),
-                    child: const Icon(
-                      Icons.favorite_border,
-                      size: 18,
-                      color: AppColors.textMuted,
-                    ),
+                  child: Consumer<FavoritesProvider>(
+                    builder: (context, favorites, child) {
+                      final isFavorite = favorites.isFavorite(product.id);
+                      return GestureDetector(
+                        onTap: () {
+                          favorites.toggleFavorite(product);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                isFavorite
+                                    ? 'Removed from favorites'
+                                    : 'Added to favorites',
+                              ),
+                              backgroundColor: isFavorite 
+                                  ? AppColors.textMuted 
+                                  : AppColors.success,
+                              behavior: SnackBarBehavior.floating,
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: AppTheme.shadowSm,
+                          ),
+                          child: Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            size: 18,
+                            color: isFavorite ? AppColors.danger : AppColors.textMuted,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],

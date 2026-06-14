@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
 import '../core/theme/app_theme.dart';
+import '../providers/favorites_provider.dart';
+import '../providers/cart_provider.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -68,7 +71,9 @@ class ProfileScreen extends StatelessWidget {
                       Icons.edit,
                       color: Colors.white,
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      _showComingSoonDialog(context, 'Edit Profile');
+                    },
                   ),
                 ],
               ),
@@ -77,38 +82,42 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Stats Cards
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    '12',
-                    'Orders',
-                    Icons.shopping_bag_outlined,
-                    AppColors.accent,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    '8',
-                    'Wishlist',
-                    Icons.favorite_border,
-                    AppColors.danger,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    '₱120k',
-                    'Spent',
-                    Icons.account_balance_wallet_outlined,
-                    AppColors.success,
-                  ),
-                ),
-              ],
+            Consumer2<CartProvider, FavoritesProvider>(
+              builder: (context, cart, favorites, child) {
+                return Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatCard(
+                        context,
+                        '0',
+                        'Orders',
+                        Icons.shopping_bag_outlined,
+                        AppColors.accent,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildStatCard(
+                        context,
+                        '${favorites.favoriteCount}',
+                        'Wishlist',
+                        Icons.favorite_border,
+                        AppColors.danger,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildStatCard(
+                        context,
+                        '₱0',
+                        'Spent',
+                        Icons.account_balance_wallet_outlined,
+                        AppColors.success,
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
 
             const SizedBox(height: 24),
@@ -122,19 +131,19 @@ class ProfileScreen extends StatelessWidget {
                   Icons.person_outline,
                   'Personal Information',
                   'Update your details',
-                  () {},
+                  () => _showComingSoonDialog(context, 'Personal Information'),
                 ),
                 _buildMenuItem(
                   Icons.location_on_outlined,
                   'Addresses',
                   'Manage shipping addresses',
-                  () {},
+                  () => _showComingSoonDialog(context, 'Addresses'),
                 ),
                 _buildMenuItem(
                   Icons.credit_card_outlined,
                   'Payment Methods',
                   'Manage payment options',
-                  () {},
+                  () => _showComingSoonDialog(context, 'Payment Methods'),
                 ),
               ],
             ),
@@ -149,19 +158,19 @@ class ProfileScreen extends StatelessWidget {
                   Icons.receipt_long_outlined,
                   'Order History',
                   'View all your orders',
-                  () {},
+                  () => _showComingSoonDialog(context, 'Order History'),
                 ),
                 _buildMenuItem(
                   Icons.favorite_border,
                   'Wishlist',
                   'View saved items',
-                  () {},
+                  () => _showWishlistDialog(context),
                 ),
                 _buildMenuItem(
                   Icons.star_border,
                   'Reviews',
                   'Your product reviews',
-                  () {},
+                  () => _showComingSoonDialog(context, 'Reviews'),
                 ),
               ],
             ),
@@ -176,25 +185,25 @@ class ProfileScreen extends StatelessWidget {
                   Icons.notifications_outlined,
                   'Notifications',
                   'Manage notifications',
-                  () {},
+                  () => _showComingSoonDialog(context, 'Notifications'),
                 ),
                 _buildMenuItem(
                   Icons.security_outlined,
                   'Security',
                   'Password & security',
-                  () {},
+                  () => _showComingSoonDialog(context, 'Security'),
                 ),
                 _buildMenuItem(
                   Icons.language_outlined,
                   'Language',
                   'English (US)',
-                  () {},
+                  () => _showComingSoonDialog(context, 'Language Settings'),
                 ),
                 _buildMenuItem(
                   Icons.dark_mode_outlined,
                   'Theme',
                   'Light mode',
-                  () {},
+                  () => _showComingSoonDialog(context, 'Theme Settings'),
                 ),
               ],
             ),
@@ -217,19 +226,19 @@ class ProfileScreen extends StatelessWidget {
                   Icons.help_outline,
                   'Help Center',
                   'FAQs and support',
-                  () {},
+                  () => _showComingSoonDialog(context, 'Help Center'),
                 ),
                 _buildMenuItem(
                   Icons.feedback_outlined,
                   'Feedback',
                   'Send us your feedback',
-                  () {},
+                  () => _showComingSoonDialog(context, 'Feedback'),
                 ),
                 _buildMenuItem(
                   Icons.info_outline,
                   'About',
-                  'Version 1.0.0',
-                  () {},
+                  'Version 1.0.0+2',
+                  () => _showAboutDialog(context),
                 ),
               ],
             ),
@@ -240,7 +249,7 @@ class ProfileScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
-                onPressed: () {},
+                onPressed: () => _showLogoutDialog(context),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   side: const BorderSide(color: AppColors.danger, width: 2),
@@ -365,6 +374,152 @@ class ProfileScreen extends StatelessWidget {
         color: AppColors.textMuted,
       ),
       onTap: onTap,
+    );
+  }
+
+  static void _showComingSoonDialog(BuildContext context, String feature) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.construction, color: AppColors.accent),
+            const SizedBox(width: 12),
+            Text(feature),
+          ],
+        ),
+        content: const Text(
+          'This feature is coming soon! We\'re working hard to bring you the best experience.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Got it'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static void _showWishlistDialog(BuildContext context) {
+    final favorites = Provider.of<FavoritesProvider>(context, listen: false);
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.favorite, color: AppColors.danger),
+            SizedBox(width: 12),
+            Text('Your Wishlist'),
+          ],
+        ),
+        content: Text(
+          favorites.favoriteCount > 0
+              ? 'You have ${favorites.favoriteCount} item${favorites.favoriteCount == 1 ? '' : 's'} in your wishlist.\n\nBrowse the shop to see your saved items!'
+              : 'Your wishlist is empty.\n\nTap the heart icon on products to save them here!',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          if (favorites.favoriteCount > 0)
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                // Navigate to shop tab
+              },
+              child: const Text('Browse Shop'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  static void _showAboutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.info, color: AppColors.accent),
+            SizedBox(width: 12),
+            Text('About Wedzz'),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Wedzz Motorparts',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text('Version 1.0.0+2'),
+            SizedBox(height: 16),
+            Text(
+              'Premium automotive parts and accessories for your vehicle. Quality you can trust.',
+              style: TextStyle(fontSize: 13),
+            ),
+            SizedBox(height: 16),
+            Text(
+              '© 2026 Wedzz Motorparts. All rights reserved.',
+              style: TextStyle(fontSize: 11, color: AppColors.textMuted),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.logout, color: AppColors.danger),
+            SizedBox(width: 12),
+            Text('Logout'),
+          ],
+        ),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Logged out successfully'),
+                  backgroundColor: AppColors.success,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/cart_provider.dart';
+import 'providers/favorites_provider.dart';
 import 'screens/main_screen.dart';
 import 'screens/chat_screen.dart';
 
@@ -28,6 +29,7 @@ class WedzzApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => FavoritesProvider()),
       ],
       child: MaterialApp(
         title: 'Wedzz Motorparts',

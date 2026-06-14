@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:badges/badges.dart' as badges;
 import '../core/constants/app_colors.dart';
 import '../core/theme/app_theme.dart';
 import '../models/product.dart';
 import '../providers/cart_provider.dart';
+import '../providers/favorites_provider.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -46,17 +48,80 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ),
                 ),
                 actions: [
-                  Container(
-                    margin: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: AppTheme.shadowSm,
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.favorite_border, color: AppColors.dark),
-                      onPressed: () {},
-                    ),
+                  // Favorite Button
+                  Consumer<FavoritesProvider>(
+                    builder: (context, favorites, child) {
+                      final isFavorite = favorites.isFavorite(widget.product.id);
+                      return Container(
+                        margin: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: AppTheme.shadowSm,
+                        ),
+                        child: IconButton(
+                          icon: Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: isFavorite ? AppColors.danger : AppColors.dark,
+                          ),
+                          onPressed: () {
+                            favorites.toggleFavorite(widget.product);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  isFavorite
+                                      ? 'Removed from favorites'
+                                      : 'Added to favorites',
+                                ),
+                                backgroundColor: isFavorite 
+                                    ? AppColors.textMuted 
+                                    : AppColors.success,
+                                behavior: SnackBarBehavior.floating,
+                                duration: const Duration(seconds: 1),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                  // Cart Button
+                  Consumer<CartProvider>(
+                    builder: (context, cart, child) {
+                      return Container(
+                        margin: const EdgeInsets.only(right: 8, top: 8, bottom: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: AppTheme.shadowSm,
+                        ),
+                        child: IconButton(
+                          icon: cart.itemCount > 0
+                              ? badges.Badge(
+                                  badgeContent: Text(
+                                    '${cart.itemCount}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  badgeStyle: const badges.BadgeStyle(
+                                    badgeColor: AppColors.accent,
+                                  ),
+                                  child: const Icon(Icons.shopping_cart, color: AppColors.dark),
+                                )
+                              : const Icon(Icons.shopping_cart_outlined, color: AppColors.dark),
+                          onPressed: () {
+                            Navigator.pop(context);
+                            // This will return to main screen, and main screen should navigate to cart
+                          },
+                        ),
+                      );
+                    },
                   ),
                 ],
                 flexibleSpace: FlexibleSpaceBar(
